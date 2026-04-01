@@ -23,6 +23,20 @@ ci_low <- unname(tt$conf.int[1])
 test_sol <- c(TRUE, FALSE, FALSE)
 interp_sol <- c(pval >= 0.05, pval < 0.05 & diff_ab > 0, pval < 0.05 & diff_ab < 0)
 equal_var_sol <- c(TRUE, FALSE)
+test_choices <- c("pooled two-sample t-test", "paired t-test", "chi-squared test")
+equal_var_choices <- c("Yes", "No")
+interp_choices <- c(
+  "There is no significant mean difference between the groups",
+  "Group A has a significantly higher mean score than Group B",
+  "Group A has a significantly lower mean score than Group B"
+)
+interp_solution <- if(pval >= 0.05) {
+  interp_choices[1]
+} else if(diff_ab > 0) {
+  interp_choices[2]
+} else {
+  interp_choices[3]
+}
 ```
 
 Question
@@ -31,45 +45,30 @@ A lecturer wants to compare exam scores between two independent tutorial groups.
 The file [tutorial_scores.csv](tutorial_scores.csv) contains the variables `group`
 and `score`.
 
-How many students are in Group A?
-##ANSWER1##
+How many students are in Group A? `r add_cloze(n_a)`
 
 Using the supplied data, compute the mean score of Group A.
-##ANSWER2##
+`r add_cloze(mean_a, tolerance = 0.1, digits = 1)`
 
 Which test is appropriate for comparing the two independent group means here?
-##ANSWER3##
+`r add_cloze(test_choices[1], test_choices, type = "schoice")`
 
 What is the p-value of the pooled two-sample t-test?
-##ANSWER4##
+`r add_cloze(pval, tolerance = 0.001, digits = 3)`
 
 Does the pooled version of the test assume equal variances in the two groups?
-##ANSWER5##
+`r add_cloze(equal_var_choices[1], equal_var_choices, type = "schoice")`
 
 What is the lower endpoint of the 95% confidence interval for A - B?
-##ANSWER6##
+`r add_cloze(ci_low, tolerance = 0.02, digits = 2)`
 
 At the 5% level, which conclusion is correct?
-##ANSWER7##
+`r add_cloze(interp_solution, interp_choices, type = "schoice")`
 
 Compute the difference in means A - B.
-##ANSWER8##
+`r add_cloze(diff_ab, tolerance = 0.1, digits = 1)`
 
-Answerlist
-----------
-*
-*
-* pooled two-sample t-test
-* paired t-test
-* chi-squared test
-*
-* Yes
-* No
-*
-* There is no significant mean difference between the groups
-* Group A has a significantly higher mean score than Group B
-* Group A has a significantly lower mean score than Group B
-*
+`r format_metainfo("answerlist")`
 
 Solution
 ========
@@ -87,6 +86,6 @@ Meta-information
 ================
 exname: Mixed statistics cloze
 extype: cloze
-exclozetype: num|num|schoice|num|schoice|num|schoice|num
-exsolution: `r n_a`|`r fmt(mean_a, 1)`|`r mchoice2string(test_sol)`|`r fmt(pval, 3)`|`r mchoice2string(equal_var_sol)`|`r fmt(ci_low, 2)`|`r mchoice2string(interp_sol)`|`r fmt(diff_ab, 1)`
-extol: 0|0.1|0|0.001|0|0.02|0|0.1
+exclozetype: `r format_metainfo("type")`
+exsolution: `r format_metainfo("solution")`
+extol: `r format_metainfo("tolerance")`
