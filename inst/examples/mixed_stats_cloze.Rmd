@@ -1,0 +1,92 @@
+```{r data generation, echo = FALSE, results = "hide"}
+n_a <- sample(18:22, 1)
+n_b <- sample(18:22, 1)
+mean_a_true <- sample(72:78, 1)
+diff_true <- sample(c(-6, -4, 0, 4, 6), 1)
+sd_pool <- sample(7:10, 1)
+
+scores_a <- round(rnorm(n_a, mean = mean_a_true, sd = sd_pool), 1)
+scores_b <- round(rnorm(n_b, mean = mean_a_true - diff_true, sd = sd_pool), 1)
+
+d <- data.frame(
+  group = c(rep("A", n_a), rep("B", n_b)),
+  score = c(scores_a, scores_b)
+)
+write.csv(d, "tutorial_scores.csv", row.names = FALSE, quote = FALSE)
+
+tt <- t.test(score ~ group, data = d, var.equal = TRUE)
+mean_a <- mean(scores_a)
+diff_ab <- mean(scores_a) - mean(scores_b)
+pval <- unname(tt$p.value)
+ci_low <- unname(tt$conf.int[1])
+
+test_sol <- c(TRUE, FALSE, FALSE)
+interp_sol <- c(pval >= 0.05, pval < 0.05 & diff_ab > 0, pval < 0.05 & diff_ab < 0)
+equal_var_sol <- c(TRUE, FALSE)
+```
+
+Question
+========
+A lecturer wants to compare exam scores between two independent tutorial groups.
+The file [tutorial_scores.csv](tutorial_scores.csv) contains the variables `group`
+and `score`.
+
+How many students are in Group A?
+##ANSWER1##
+
+Using the supplied data, compute the mean score of Group A.
+##ANSWER2##
+
+Which test is appropriate for comparing the two independent group means here?
+##ANSWER3##
+
+What is the p-value of the pooled two-sample t-test?
+##ANSWER4##
+
+Does the pooled version of the test assume equal variances in the two groups?
+##ANSWER5##
+
+What is the lower endpoint of the 95% confidence interval for A - B?
+##ANSWER6##
+
+At the 5% level, which conclusion is correct?
+##ANSWER7##
+
+Compute the difference in means A - B.
+##ANSWER8##
+
+Answerlist
+----------
+*
+*
+* pooled two-sample t-test
+* paired t-test
+* chi-squared test
+*
+* Yes
+* No
+*
+* There is no significant mean difference between the groups
+* Group A has a significantly higher mean score than Group B
+* Group A has a significantly lower mean score than Group B
+*
+
+Solution
+========
+The standard procedure is a pooled two-sample t-test. The pooled version
+assumes equal variances in the two groups.
+
+The numerical answers can be obtained in R with:
+
+```{r analysis, echo = FALSE, comment = NA}
+aggregate(score ~ group, data = d, mean)
+t.test(score ~ group, data = d, var.equal = TRUE)
+```
+
+Meta-information
+================
+exname: Mixed statistics cloze
+extype: cloze
+exclozetype: num|num|schoice|num|schoice|num|schoice|num
+exsolution: `r n_a`|`r fmt(mean_a, 1)`|`r mchoice2string(test_sol)`|`r fmt(pval, 3)`|`r mchoice2string(equal_var_sol)`|`r fmt(ci_low, 2)`|`r mchoice2string(interp_sol)`|`r fmt(diff_ab, 1)`
+extol: 0|0.1|0|0.001|0|0.02|0|0.1

@@ -15,8 +15,10 @@ License: GPL-2 | GPL-3
 Encoding: UTF-8
 LazyData: true
 Imports:
-    exams
+    base64enc,
+    exams,
+    tools,
+    utils
 Suggests:
     testthat (>= 3.0.0)
 Config/testthat/edition: 3
-RoxygenNote: 7.3.2
