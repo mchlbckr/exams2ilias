@@ -1,7 +1,8 @@
 # exams2ilias
 
 `exams2ilias` is a small standalone R package that builds ILIAS question pool
-exports on top of [`exams`](https://www.r-exams.org/). Version `0.0.1`
+exports on top of [`exams`](https://www.r-exams.org/) while keeping the
+ILIAS-specific QTI rendering logic inside this package. Version `0.0.1`
 focuses on the export structure that was validated against `ILIAS 9.17`.
 
 ## Install

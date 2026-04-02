@@ -1,0 +1,28 @@
+Question
+========
+Welche der folgenden Städte ist die Landeshauptstadt von Nordrhein-Westfalen?
+
+```{r questionlist, echo = FALSE, results = "asis"}
+exams::answerlist(c(
+  "Düsseldorf",
+  "Köln",
+  "Münster",
+  "Groß-Berlin"
+), markup = "markdown")
+```
+
+Solution
+========
+Düsseldorf ist die Hauptstadt von Nordrhein-Westfalen.
+
+```{r solutionlist, echo = FALSE, results = "asis"}
+exams::answerlist(c("True", "False", "False", "False"), markup = "markdown")
+```
+
+Meta-information
+================
+extype: schoice
+exsolution: 1000
+exname: Single Choice Characters
+exshuffle: TRUE
+expoints: 1

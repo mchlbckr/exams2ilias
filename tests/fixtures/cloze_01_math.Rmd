@@ -1,0 +1,46 @@
+Question
+========
+Here is a complex function regarding the probability of a specific event:
+
+$f(x) = \frac{x^2 + 2x}{\sqrt{y}}$
+<br><br>
+
+### 1. Numerator
+If $x = 4$ and $y = 4$, what is the value of the numerator ($x^2 + 2x$)? ##ANSWER1##
+<br><br>
+
+### 2. Final Value
+What is the final value of the entire function $f(x)$? ##ANSWER2##
+<br><br>
+
+### 3. Function Type
+Because the function contains an $x^2$, it is considered a: ##ANSWER3##
+
+```{r questionlist, echo = FALSE, results = "asis"}
+exams::answerlist(c(
+  "",
+  "",
+  "Non-linear function", "Linear function"
+), markup = "markdown")
+```
+
+Solution
+========
+Numerator: $4^2 + 2(4) = 16 + 8 = 24$. Denominator: $\sqrt{4} = 2$. Final value: $12$. It is non-linear.
+
+```{r solutionlist, echo = FALSE, results = "asis"}
+exams::answerlist(c(
+  "",
+  "",
+  "True", "False"
+), markup = "markdown")
+```
+
+Meta-information
+================
+extype: cloze
+exclozetype: num|num|schoice
+exsolution: 24|12|10
+exname: Cloze Math Test
+extol: 0
+expoints: 1|1|1

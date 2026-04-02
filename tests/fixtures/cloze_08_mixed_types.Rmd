@@ -1,0 +1,51 @@
+```{r data_generation, echo = FALSE, results = "hide"}
+n_A <- sample(25:35, 1)
+n_B <- sample(25:35, 1)
+mean_A <- sample(60:75, 1)
+mean_B <- mean_A + sample(c(-4:-1, 1:4), 1)
+
+df <- data.frame(
+  group = factor(rep(c("A", "B"), c(n_A, n_B))),
+  score = round(c(rnorm(n_A, mean_A, 8), rnorm(n_B, mean_B, 8)), 1)
+)
+
+sol_n_A <- n_A
+sol_mean_A <- round(mean(df$score[df$group == "A"]), 2)
+tt <- t.test(score ~ group, data = df, var.equal = TRUE)
+sol_pval <- round(tt$p.value, 3)
+sol_conc <- ifelse(sol_pval < 0.05, "Reject", "Keep")
+```
+
+Question
+========
+A lecturer wants to compare exam scores between two independent tutorial groups. The generated data contain the variables `group` and `score`.
+
+How many students are in Group A?<br>
+##ANSWER1##
+<br>
+
+What is the mean score of Group A?<br>
+##ANSWER2##
+<br>
+
+What is the p-value of the pooled two-sample t-test?<br>
+##ANSWER3##
+<br>
+
+Based on a 5% significance level, should we **Reject** or **Keep** the null hypothesis?<br>
+##ANSWER4##
+
+Solution
+========
+* The number of students in Group A is `r sol_n_A`.
+* The mean score of Group A is `r sol_mean_A`.
+* The p-value is `r sol_pval`.
+* The correct conclusion is to `r sol_conc` the null hypothesis.
+
+Meta-information
+================
+extype: cloze
+exsolution: `r sol_n_A`|`r sol_mean_A`|`r sol_pval`|`r sol_conc`
+exclozetype: num|num|num|string
+exname: Cloze Mixed Types
+extol: 0|0.05|0.005|0

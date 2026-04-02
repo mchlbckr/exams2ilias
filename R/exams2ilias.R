@@ -44,7 +44,7 @@ exams2ilias <- function(file, n = 1L, nsamp = NULL, dir = ".",
   maxattempts_qti12 <- maxattempts
   maxattempts_qti12[is.infinite(maxattempts_qti12) | maxattempts_qti12 == 0] <- 1
 
-  rval <- exams::exams2qti12(file = file, n = n, nsamp = nsamp, dir = workdir,
+  rval <- ilias_exams2qti12(file = file, n = n, nsamp = nsamp, dir = workdir,
     name = name, quiet = quiet, edir = edir, tdir = tdir, sdir = sdir, verbose = verbose,
     resolution = resolution, width = width, height = height, svg = svg, encoding = encoding,
     num = num, mchoice = mchoice, schoice = schoice, string = string, cloze = cloze,

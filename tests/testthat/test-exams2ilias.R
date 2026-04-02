@@ -2,6 +2,10 @@ read_zip_xml <- function(zipfile, member) {
   readLines(unz(zipfile, member), warn = FALSE)
 }
 
+fixture_path <- function(name) {
+  test_path("..", "fixtures", name)
+}
+
 test_that("non-placeholder cloze export uses ILIAS top-level items", {
   mydir <- tempfile("exams2ilias-")
   dir.create(mydir)
@@ -36,6 +40,38 @@ test_that("non-placeholder cloze export uses ILIAS top-level items", {
   expect_true(any(grepl('<TriggerQuestion Id="[0-9]+"></TriggerQuestion>', lm_qpl, perl = TRUE)))
 })
 
+test_that("metadata fields are emitted as siblings in single-choice items", {
+  mydir <- tempfile("exams2ilias-")
+  dir.create(mydir)
+
+  exams2ilias(
+    system.file("exercises/swisscapital.Rmd", package = "exams"),
+    n = 1,
+    dir = mydir,
+    name = "swiss_ilias",
+    xmlcollapse = FALSE
+  )
+
+  swiss_zip <- file.path(mydir, "swiss_ilias_qpl.zip")
+  swiss_qti <- paste(read_zip_xml(swiss_zip, "swiss_ilias_qpl/swiss_ilias_qti.xml"), collapse = "\n")
+
+  expect_true(grepl(
+    "<fieldlabel>QUESTIONTYPE</fieldlabel>\\s*<fieldentry>SINGLE CHOICE QUESTION</fieldentry>\\s*</qtimetadatafield>\\s*<qtimetadatafield>\\s*<fieldlabel>AUTHOR</fieldlabel>",
+    swiss_qti,
+    perl = TRUE
+  ))
+  expect_false(grepl(
+    "<fieldlabel>identicalScoring</fieldlabel>\\s*<qtimetadatafield>",
+    swiss_qti,
+    perl = TRUE
+  ))
+  expect_true(grepl(
+    "<fieldlabel>fixedTextLength</fieldlabel>\\s*<fieldentry/>\\s*</qtimetadatafield>\\s*<qtimetadatafield>\\s*<fieldlabel>identicalScoring</fieldlabel>",
+    swiss_qti,
+    perl = TRUE
+  ))
+})
+
 test_that("placeholder cloze export keeps the simplified ILIAS structure", {
   mydir <- tempfile("exams2ilias-")
   dir.create(mydir)
@@ -60,53 +96,81 @@ test_that("placeholder cloze export keeps the simplified ILIAS structure", {
   expect_false(any(grepl("<itemfeedback", vowels_qti, fixed = TRUE)))
 })
 
-test_that("multiple-choice export uses top-level items", {
+test_that("vault mixed-type cloze fixture exports without the upstream crash", {
   mydir <- tempfile("exams2ilias-")
   dir.create(mydir)
 
-  exams2ilias(
-    system.file("exercises/ttest.Rmd", package = "exams"),
-    n = 1,
-    dir = mydir,
-    name = "ttest_ilias",
-    xmlcollapse = FALSE
+  expect_no_error(
+    exams2ilias(
+      fixture_path("cloze_08_mixed_types.Rmd"),
+      n = 1,
+      dir = mydir,
+      name = "cloze_08_mixed",
+      xmlcollapse = FALSE,
+      eval = list(partial = TRUE, negative = TRUE)
+    )
   )
 
-  ttest_zip <- file.path(mydir, "ttest_ilias_qpl.zip")
-  expect_true(file.exists(ttest_zip))
-
-  ttest_qti <- read_zip_xml(ttest_zip, "ttest_ilias_qpl/ttest_ilias_qti.xml")
-
-  expect_false(any(grepl("<assessment", ttest_qti, fixed = TRUE)))
-  expect_false(any(grepl("<section", ttest_qti, fixed = TRUE)))
-  expect_true(any(grepl('maxattempts="0"', ttest_qti, fixed = TRUE)))
-  expect_true(any(grepl("<fieldentry>MULTIPLE CHOICE QUESTION</fieldentry>", ttest_qti, fixed = TRUE)))
-  expect_true(any(grepl('<response_lid ident="[^"]+" rcardinality="Multiple"', ttest_qti, perl = TRUE)))
-  expect_true(any(grepl("<itemcontrol ", ttest_qti, fixed = TRUE)))
-  expect_true(any(grepl('<setvar varname="SCORE" action="Add">', ttest_qti, fixed = TRUE)))
+  expect_true(file.exists(file.path(mydir, "cloze_08_mixed_qpl.zip")))
 })
 
-test_that("single-choice export keeps the working 04422d2 ILIAS layout", {
+test_that("character-heavy cloze choices are wrapped in CDATA", {
   mydir <- tempfile("exams2ilias-")
   dir.create(mydir)
 
   exams2ilias(
-    system.file("exercises/swisscapital.Rmd", package = "exams"),
+    fixture_path("cloze_02_chars.Rmd"),
     n = 1,
     dir = mydir,
-    name = "swiss_ilias",
+    name = "cloze_chars",
     xmlcollapse = FALSE
   )
 
-  swiss_zip <- file.path(mydir, "swiss_ilias_qpl.zip")
-  expect_true(file.exists(swiss_zip))
+  qti <- read_zip_xml(file.path(mydir, "cloze_chars_qpl.zip"), "cloze_chars_qpl/cloze_chars_qti.xml")
 
-  swiss_qti <- read_zip_xml(swiss_zip, "swiss_ilias_qpl/swiss_ilias_qti.xml")
+  expect_true(any(grepl('<mattext texttype="text/html"><!\\[CDATA\\[', qti, perl = TRUE)))
+  expect_true(any(grepl('<varequal respident="gap_0"><!\\[CDATA\\[', qti, perl = TRUE)))
+})
 
-  expect_false(any(grepl("<assessment", swiss_qti, fixed = TRUE)))
-  expect_false(any(grepl("<section", swiss_qti, fixed = TRUE)))
-  expect_true(any(grepl("<fieldentry>SINGLE CHOICE QUESTION</fieldentry>", swiss_qti, fixed = TRUE)))
-  expect_true(any(grepl('<response_lid ident="[^"]+" rcardinality="Single"', swiss_qti, perl = TRUE)))
-  expect_true(any(grepl("<itemcontrol ", swiss_qti, fixed = TRUE)))
-  expect_true(any(grepl('<setvar varname="SCORE" action="Set">1</setvar>', swiss_qti, fixed = TRUE)))
+test_that("single-choice export uses matching response identifiers and additive scoring", {
+  mydir <- tempfile("exams2ilias-")
+  dir.create(mydir)
+
+  exams2ilias(
+    fixture_path("schoice_02_chars.Rmd"),
+    n = 1,
+    dir = mydir,
+    name = "schoice_chars",
+    xmlcollapse = FALSE
+  )
+
+  qti <- read_zip_xml(file.path(mydir, "schoice_chars_qpl.zip"), "schoice_chars_qpl/schoice_chars_qti.xml")
+  response_line <- qti[grep('<response_lid ident="', qti, fixed = TRUE)][1]
+  response_id <- sub('^.*<response_lid ident="([^"]+)".*$', "\\1", response_line)
+
+  expect_match(response_id, "_RESPONSE_")
+  expect_true(any(grepl(paste0('<varequal respident="', response_id, '" case="Yes">'), qti, fixed = TRUE)))
+  expect_true(any(grepl('<setvar varname="SCORE" action="Add">1</setvar>', qti, fixed = TRUE)))
+  expect_false(any(grepl('<setvar varname="SCORE" action="Set">1</setvar>', qti, fixed = TRUE)))
+})
+
+test_that("multiple-choice export keeps partial-credit scoring without all-or-nothing fallback", {
+  mydir <- tempfile("exams2ilias-")
+  dir.create(mydir)
+
+  exams2ilias(
+    fixture_path("mchoice_01_math.Rmd"),
+    n = 1,
+    dir = mydir,
+    name = "mchoice_math",
+    xmlcollapse = FALSE,
+    eval = list(partial = TRUE, negative = TRUE)
+  )
+
+  qti <- read_zip_xml(file.path(mydir, "mchoice_math_qpl.zip"), "mchoice_math_qpl/mchoice_math_qti.xml")
+
+  expect_true(any(grepl('<response_lid ident="[^"]+" rcardinality="Multiple"', qti, perl = TRUE)))
+  expect_gte(sum(grepl('<setvar varname="SCORE" action="Add">1</setvar>', qti, fixed = TRUE)), 3L)
+  expect_true(any(grepl('<setvar varname="SCORE" action="Add">-1\\.5</setvar>', qti, perl = TRUE)))
+  expect_false(any(grepl('<setvar varname="SCORE" action="Set">3</setvar>', qti, fixed = TRUE)))
 })

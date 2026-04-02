@@ -1,0 +1,22 @@
+Question
+========
+Welche der folgenden Operatoren bedeutet "strikt kleiner als" in R? ##ANSWER1##
+
+```{r questionlist, echo = FALSE, results = "asis"}
+exams::answerlist(c("&lt;", "&gt;", "=="), markup = "markdown")
+```
+
+Solution
+========
+Der korrekte Operator ist `<`.
+
+```{r solutionlist, echo = FALSE, results = "asis"}
+exams::answerlist(c("True", "False", "False"), markup = "markdown")
+```
+
+Meta-information
+================
+extype: cloze
+exclozetype: schoice
+exsolution: 100
+exname: Cloze Characters Test

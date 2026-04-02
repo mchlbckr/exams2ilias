@@ -153,16 +153,16 @@ ilias_item_metadata <- function(questiontype, ilias_version = "9.17.0",
       '<fieldlabel>AUTHOR</fieldlabel>',
       paste0('<fieldentry>', ilias_escape_text(author), '</fieldentry>'),
       '</qtimetadatafield>'
-    ), after = 9L)
+    ), after = 11L)
   }
   if(include_fixed_text_length) {
-    pos <- grep("<fieldlabel>identicalScoring</fieldlabel>", xml, fixed = TRUE)[1L] - 1L
+    pos <- grep("<fieldlabel>identicalScoring</fieldlabel>", xml, fixed = TRUE)[1L]
     xml <- append(xml, c(
       '<qtimetadatafield>',
       '<fieldlabel>fixedTextLength</fieldlabel>',
       '<fieldentry/>',
       '</qtimetadatafield>'
-    ), after = pos)
+    ), after = pos - 2L)
   }
   xml
 }
@@ -326,7 +326,7 @@ ilias_gap_xml <- function(type, gap_id, choices, solution, tolerance, points, ma
     presentation <- c(presentation,
       paste0('<response_label ident="', j - 1L, '">'),
       '<material>',
-      paste0('<mattext>', ilias_escape_text(choices[j]), '</mattext>'),
+      paste0('<mattext texttype="text/html"><![CDATA[', choices[j], ']]></mattext>'),
       '</material>',
       '</response_label>'
     )
@@ -338,7 +338,7 @@ ilias_gap_xml <- function(type, gap_id, choices, solution, tolerance, points, ma
     c(
       '<respcondition continue="Yes">',
       '<conditionvar>',
-      paste0('<varequal respident="', gap_id, '">', ilias_escape_text(choices[j]), '</varequal>'),
+      paste0('<varequal respident="', gap_id, '"><![CDATA[', choices[j], ']]></varequal>'),
       '</conditionvar>',
       paste0('<setvar action="Add">', ilias_format_value(pts), '</setvar>'),
       '</respcondition>'

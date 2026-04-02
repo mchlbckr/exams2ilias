@@ -72,8 +72,8 @@
   If \code{zip} is \code{TRUE} (default), an ILIAS question pool object is generated.
 }
 \details{
-  \code{exams2ilias} is a convenience interface to \code{\link[exams]{exams2qti12}}
-  which generates QTI 1.2 with ILIAS-specific tweaks.
+  \code{exams2ilias} uses an ILIAS-specific QTI 1.2 rendering path inside this
+  package and then rewrites the result to the question-pool layout required by ILIAS.
 
   Version 0.0.1 in this package targets ILIAS 9.17 and mirrors the working export
   structure that was validated against that version. In particular, the exported
@@ -86,7 +86,7 @@
   are mapped to ILIAS gap elements.
 }
 \seealso{
-  \code{\link[exams]{exams2qti12}}
+  \code{\link[exams]{xexams}}
 }
 \examples{
 library("exams2ilias")
