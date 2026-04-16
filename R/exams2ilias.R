@@ -59,7 +59,8 @@ exams2ilias <- function(file, n = 1L, nsamp = NULL, dir = ".",
   xml <- readLines(qti12_path, warn = FALSE)
   items <- extract_qti12_items(xml)
   exm <- ilias_flatten_exams(rval)
-  lookup <- setNames(seq_along(exm), vapply(exm, function(z) z$item$metainfo$id, character(1)))
+  lookup <- seq_along(exm)
+  names(lookup) <- vapply(exm, function(z) z$item$metainfo$id, character(1))
 
   if(length(items) != length(exm)) {
     stop("generated item count does not match exams item count")

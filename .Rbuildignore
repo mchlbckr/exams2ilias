@@ -1,2 +1,4 @@
-^\\.github$
-^README\\.md$
+^\.github$
+^\.github/
+^README\.md$
+^cran-comments\.md$

@@ -1,0 +1,24 @@
+This package contains code adapted from the CRAN package exams
+(<https://cran.r-project.org/package=exams>), which is distributed under
+the GPL-2 | GPL-3 license.
+
+In particular, parts of the ILIAS/QTI export path in this package are derived
+from the upstream exams implementation in exams2ilias() and exams2qti12(),
+with additional ILIAS-specific adaptations for standalone use.
+
+The authors credited for exams in its DESCRIPTION file are:
+
+  Achim Zeileis
+  Bettina Gruen
+  Friedrich Leisch
+  Nikolaus Umlauf
+  Niels Smits
+  Mirko Birbaumer
+  Dominik Ernst
+  Patrik Keller
+  Reto Stauffer
+  Kenji Sato
+  Florian Wickelmaier
+  Sebastian Bachler
+
+The exams2ilias package itself is maintained by Michael Bücker.

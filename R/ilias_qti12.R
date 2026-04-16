@@ -1,9 +1,138 @@
-.ilias_exams_eval <- function(...) {
-  getFromNamespace("exams_eval", "exams")(...)
+## Adapted from exams::exams_eval() and exams:::.empty_text() to avoid
+## relying on non-exported objects from the upstream package.
+.ilias_exams_eval <- function(partial = TRUE, negative = FALSE,
+  rule = c("false2", "false", "true", "all", "none"))
+{
+  rule <- match.arg(rule, c("false2", "false", "true", "all", "none"))
+
+  if(is.logical(negative)) negative <- ifelse(negative, -1, 0)
+  negative <- -abs(as.numeric(negative))
+
+  extype <- function(correct, answer = NULL, type = NULL) {
+    mchoice01 <- function(x) as.numeric(strsplit(unlist(x), "")[[1L]])
+
+    if(is.null(type)) {
+      type <- if(is.numeric(correct)) {
+        "num"
+      } else if(is.logical(correct)) {
+        "mchoice"
+      } else if(is.character(correct)) {
+        if(all(strsplit(correct, "")[[1L]] %in% c("0", "1"))) "mchoice" else "string"
+      } else {
+        "unknown"
+      }
+    }
+    if(!(type %in% c("num", "mchoice", "schoice", "string"))) stop("Unknown exercise type.")
+
+    if(type != "string" && is.character(correct)) {
+      correct <- if(type == "num") as.numeric(correct) else as.logical(mchoice01(correct))
+    }
+
+    if(!is.null(answer)) {
+      answer <- switch(type,
+        "num" = {
+          if(is.character(answer)) answer <- gsub(",", ".", answer, fixed = TRUE)
+          as.numeric(answer)
+        },
+        "mchoice" = {
+          if(is.character(answer)) answer <- mchoice01(answer)
+          as.logical(answer)
+        },
+        "schoice" = {
+          if(is.character(answer)) answer <- mchoice01(answer)
+          as.logical(answer)
+        },
+        "string" = {
+          as.character(answer)
+        }
+      )
+      if(!any(is.na(answer)) && (length(correct) != length(answer))) {
+        stop("Length of 'correct' and given 'answer' do not match.")
+      }
+    }
+
+    list(type = type, correct = correct, answer = answer)
+  }
+
+  checkanswer <- function(correct, answer, tolerance = 0, type = NULL) {
+    type <- extype(correct, answer, type = type)
+    correct <- type$correct
+    answer <- type$answer
+    type <- type$type
+
+    if(is.null(answer)) return(rep.int(0, length(correct)))
+
+    if(type == "num") {
+      if(any(is.na(answer))) return(0L)
+      if(all(answer >= correct - tolerance & answer <= correct + tolerance)) {
+        return(1L)
+      } else {
+        return(-1L)
+      }
+    }
+
+    if(type %in% c("mchoice", "schoice")) {
+      if(any(is.na(answer))) return(0L)
+      if(partial && type == "mchoice") {
+        rval <- rep.int(0L, length(answer))
+        if(all(!answer)) return(rval)
+        rval[which(correct & answer)] <- 1L
+        rval[which(!correct & answer)] <- -1L
+        return(rval)
+      } else {
+        if(any(is.na(answer))) return(0)
+        if(negative < 0 && all(!answer)) return(0)
+        return(ifelse(all(correct == answer), 1L, -1L))
+      }
+    }
+
+    if(type == "string") {
+      if(any(is.na(answer)) || all(grepl("^[[:space:]]*$", answer))) return(NA)
+      return(ifelse(correct == answer, 1L, -1L))
+    }
+  }
+
+  pointvec <- function(correct = NULL, type = NULL) {
+    if(!partial) return(c("pos" = 1, "neg" = negative))
+    if(is.null(correct)) stop("Need 'correct' answer to compute points vector.")
+    type <- extype(correct, type = type)
+    if(all(!type$correct)) warning("partial credits for mchoice answer without correct answer alternatives")
+    if(type$type == "mchoice") {
+      n <- switch(rule,
+        "false" = -1 / sum(!type$correct),
+        "false2" = -1 / pmax(sum(!type$correct), 2),
+        "true" = -1 / sum(type$correct),
+        "all" = -1,
+        "none" = 0
+      )
+      pv <- c("pos" = 1 / sum(type$correct), "neg" = n)
+    } else {
+      pv <- c("pos" = 1, "neg" = negative)
+    }
+    pv
+  }
+
+  pointsum <- function(correct, answer, tolerance = 0, type = NULL) {
+    pts <- pointvec(correct, type = type)
+    chk <- as.character(checkanswer(correct, answer, tolerance = tolerance, type = type))
+    res <- rep(0, length.out = length(chk))
+    res[which(chk == "1")] <- pts["pos"]
+    res[which(chk == "-1")] <- pts["neg"]
+    pmax(sum(res), negative)
+  }
+
+  list(
+    partial = partial,
+    negative = negative,
+    rule = rule,
+    checkanswer = checkanswer,
+    pointvec = pointvec,
+    pointsum = pointsum
+  )
 }
 
 .ilias_empty_text <- function(x) {
-  getFromNamespace(".empty_text", "exams")(x)
+  is.null(x) || anyNA(x) || all(grepl("^[[:space:]]*$", x))
 }
 
 ilias_make_id <- function(size, n = 1L) {
