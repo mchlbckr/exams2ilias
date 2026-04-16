@@ -1,0 +1,97 @@
+```{r data generation, echo = FALSE, results = "hide"}
+n_control <- sample(28:34, 1)
+n_treat <- sample(28:34, 1)
+mean_control <- sample(seq(68, 72, by = 0.5), 1)
+mean_diff <- sample(seq(4.5, 5.5, by = 0.5), 1)
+mean_treat <- mean_control + mean_diff
+sd_control <- sample(seq(6.0, 7.5, by = 0.5), 1)
+sd_treat <- sample(seq(6.0, 7.5, by = 0.5), 1)
+
+se_diff <- sqrt(sd_control^2 / n_control + sd_treat^2 / n_treat)
+df_welch <- (sd_control^2 / n_control + sd_treat^2 / n_treat)^2 /
+  (((sd_control^2 / n_control)^2) / (n_control - 1) +
+   ((sd_treat^2 / n_treat)^2) / (n_treat - 1))
+t_stat <- mean_diff / se_diff
+p_value <- 2 * pt(-abs(t_stat), df = df_welch)
+ci_low <- mean_diff - qt(0.975, df = df_welch) * se_diff
+
+method_name <- "Welch t-test"
+null_choices <- c(
+  "The two population means are equal",
+  "The two sample means are equal",
+  "The two sample variances are equal"
+)
+interpret_choices <- c(
+  "The treatment mean is higher than the control mean",
+  "The 95% confidence interval excludes 0",
+  "The result proves a causal effect",
+  "A two-sided 5% test rejects equal population means"
+)
+interpret_solution <- c(TRUE, TRUE, FALSE, TRUE)
+```
+
+Question
+========
+Two independent tutorial groups completed the same 100-point statistics quiz.
+The summarized results are:
+
+```{r summary table, echo = FALSE}
+data.frame(
+  group = c("Control", "Treatment"),
+  n = c(n_control, n_treat),
+  mean = c(mean_control, mean_treat),
+  sd = c(sd_control, sd_treat)
+)
+```
+
+How many students are in the treatment group? `r add_cloze(n_treat)`
+
+What is the observed mean difference treatment minus control?
+`r add_cloze(mean_diff, tolerance = 0.1, digits = 1)`
+
+If equal variances should not be assumed, which test name is appropriate?
+`r add_cloze(method_name)`
+
+Which null hypothesis belongs to the two-sided comparison?
+`r add_cloze(null_choices[1], null_choices, type = "schoice")`
+
+What is the approximate two-sided p-value of the Welch test?
+`r add_cloze(p_value, tolerance = 0.001, digits = 3)`
+
+What is the lower endpoint of the 95% confidence interval for the mean
+difference?
+`r add_cloze(ci_low, tolerance = 0.02, digits = 2)`
+
+Select all statements that are supported by the summary statistics and the test
+result.
+
+`r add_cloze(setNames(interpret_solution, interpret_choices), type = "mchoice")`
+
+`r format_metainfo("answerlist")`
+
+
+Solution
+========
+The treatment group is larger on average, so the estimated mean difference is
+positive. When equal variances should not be assumed, the standard procedure is
+the Welch t-test.
+
+Using the summary statistics, the standard error of the mean difference is
+
+$$
+\sqrt{\frac{s_C^2}{n_C} + \frac{s_T^2}{n_T}}.
+$$
+
+The reported p-value and confidence interval both indicate that the treatment
+group has the higher mean score.
+
+
+Meta-information
+================
+exname: Statistics cloze overview
+extype: cloze
+exclozetype: `r format_metainfo("type")`
+exsolution: `r format_metainfo("solution")`
+extol: `r format_metainfo("tolerance")`
+expoints: 1|1|1|1|1|1|1
+exshuffle: TRUE

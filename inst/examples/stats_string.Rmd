@@ -1,0 +1,15 @@
+Question
+========
+Which summary statistic is resistant to outliers and corresponds to the 50%
+quantile of a distribution?
+
+Solution
+========
+The correct answer is ``median``.
+
+Meta-information
+================
+extype: string
+exsolution: median
+exname: Robust summary statistic
+expoints: 1

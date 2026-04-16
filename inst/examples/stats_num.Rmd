@@ -1,0 +1,28 @@
+```{r data generation, echo = FALSE, results = "hide"}
+n <- sample(c(25, 36, 49, 64), 1)
+sample_sd <- sample(c(8.0, 9.5, 11.0, 12.5), 1)
+se_mean <- sample_sd / sqrt(n)
+```
+
+Question
+========
+A random sample of size `r n` has sample standard deviation `r sample_sd`.
+
+What is the standard error of the sample mean? Round to two decimal places.
+
+Solution
+========
+The standard error of the mean is
+
+$$
+\operatorname{SE}(\bar{x}) = \frac{s}{\sqrt{n}} =
+\frac{`r sample_sd`}{\sqrt{`r n`}} = `r fmt(se_mean, 2)`.
+$$
+
+Meta-information
+================
+extype: num
+exsolution: `r fmt(se_mean, 2)`
+exname: Standard error of the mean
+extol: 0.01
+expoints: 1

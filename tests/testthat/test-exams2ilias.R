@@ -6,6 +6,10 @@ fixture_path <- function(name) {
   test_path("..", "fixtures", name)
 }
 
+example_path <- function(name) {
+  system.file("examples", name, package = "exams2ilias")
+}
+
 test_that("non-placeholder cloze export uses ILIAS top-level items", {
   mydir <- tempfile("exams2ilias-")
   dir.create(mydir)
@@ -173,4 +177,55 @@ test_that("multiple-choice export keeps partial-credit scoring without all-or-no
   expect_gte(sum(grepl('<setvar varname="SCORE" action="Add">1</setvar>', qti, fixed = TRUE)), 3L)
   expect_true(any(grepl('<setvar varname="SCORE" action="Add">-1\\.5</setvar>', qti, perl = TRUE)))
   expect_false(any(grepl('<setvar varname="SCORE" action="Set">3</setvar>', qti, fixed = TRUE)))
+})
+
+test_that("bundled example exercises export individually", {
+  example_files <- c(
+    "stats_cloze.Rmd",
+    "stats_schoice.Rmd",
+    "stats_mchoice.Rmd",
+    "stats_num.Rmd",
+    "stats_string.Rmd"
+  )
+
+  mydir <- tempfile("exams2ilias-")
+  dir.create(mydir)
+
+  for(file in example_files) {
+    example_file <- example_path(file)
+    expect_true(file.exists(example_file), info = file)
+
+    export_name <- tools::file_path_sans_ext(basename(file))
+    expect_no_error({
+      exams2ilias(
+        example_file,
+        n = 1,
+        dir = mydir,
+        name = export_name,
+        xmlcollapse = FALSE,
+        solutionswitch = FALSE
+      )
+    })
+
+    zipfile <- file.path(mydir, paste0(export_name, "_qpl.zip"))
+    expect_true(file.exists(zipfile), info = file)
+  }
+})
+
+test_that("bundled generator script exports example set and combined pool", {
+  script <- example_path("generate_examples.R")
+  expect_true(file.exists(script))
+
+  env <- new.env(parent = globalenv())
+  source(script, local = env)
+  expect_true(is.function(env$generate_example_exports))
+
+  mydir <- tempfile("exams2ilias-")
+  dir.create(mydir)
+
+  result <- env$generate_example_exports(output_dir = mydir, n = 1, combined = TRUE)
+
+  expect_length(result$individual, 5L)
+  expect_true(all(file.exists(result$individual)))
+  expect_true(file.exists(result$combined))
 })

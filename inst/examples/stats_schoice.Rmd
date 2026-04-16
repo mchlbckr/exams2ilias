@@ -1,0 +1,36 @@
+```{r data generation, echo = FALSE, results = "hide"}
+p_value <- sample(c(0.012, 0.018, 0.024, 0.031, 0.041), 1)
+```
+
+Question
+========
+A two-sided hypothesis test for a regression coefficient yields a p-value of
+`r format(p_value, nsmall = 3)`.
+
+Which statement is correct?
+
+```{r questionlist, echo = FALSE, results = "asis"}
+exams::answerlist(c(
+  "At the 5% significance level, the null hypothesis is rejected.",
+  "The p-value is the probability that the null hypothesis is true.",
+  "The p-value proves that the effect is practically important.",
+  "The p-value shows that the estimated coefficient must be positive."
+), markup = "markdown")
+```
+
+Solution
+========
+Because the p-value is below 0.05, the null hypothesis is rejected at the 5%
+level. The other statements are common misinterpretations of p-values.
+
+```{r solutionlist, echo = FALSE, results = "asis"}
+exams::answerlist(c("True", "False", "False", "False"), markup = "markdown")
+```
+
+Meta-information
+================
+extype: schoice
+exsolution: 1000
+exname: P-value interpretation
+exshuffle: TRUE
+expoints: 1

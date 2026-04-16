@@ -1,0 +1,44 @@
+Question
+========
+Which of the following statements about a 95% confidence interval for a mean
+difference are TRUE?
+
+```{r questionlist, echo = FALSE, results = "asis"}
+exams::answerlist(c(
+  "If the interval excludes 0, a two-sided 5% test rejects the null hypothesis of equal means.",
+  "A larger sample size tends to make the interval narrower.",
+  "If the interval contains 0, the null hypothesis has been proven true.",
+  "Higher sampling variability tends to make the interval wider.",
+  "A 95% confidence interval means that 95% of observed sample means must lie inside the interval."
+), markup = "markdown")
+```
+
+Solution
+========
+1. True. Excluding 0 corresponds to rejection in the equivalent two-sided 5%
+test.
+2. True. Larger samples reduce the standard error and typically narrow the
+interval.
+3. False. Containing 0 means the data are compatible with no mean difference,
+not that the null hypothesis is proven.
+4. True. More variability increases the standard error and widens the interval.
+5. False. The 95% refers to long-run coverage of the interval construction, not
+to where observed sample means must lie.
+
+```{r solutionlist, echo = FALSE, results = "asis"}
+exams::answerlist(c(
+  "True",
+  "True",
+  "False",
+  "True",
+  "False"
+), markup = "markdown")
+```
+
+Meta-information
+================
+extype: mchoice
+exsolution: 11010
+exname: Confidence interval statements
+exshuffle: TRUE
+expoints: 3
