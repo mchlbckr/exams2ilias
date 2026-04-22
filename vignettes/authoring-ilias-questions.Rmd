@@ -1,0 +1,101 @@
+---
+title: "Authoring ILIAS-ready questions"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Authoring ILIAS-ready questions}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  eval = FALSE
+)
+```
+
+This article summarizes the authoring patterns currently covered by the package
+and its bundled examples.
+
+## Supported exercise types
+
+The package exports the following main question types:
+
+- `cloze`
+- `schoice`
+- `mchoice`
+- `num`
+- `string`
+
+For cloze exercises, the gap subtypes `num`, `string`, `schoice`, and
+`mchoice` are mapped to the corresponding ILIAS gap elements.
+
+## Recommended cloze style
+
+For new cloze exercises, the recommended style is to use
+`exams::add_cloze()` together with `format_metainfo()`. This keeps the
+question text and the cloze metadata synchronized.
+
+```{r}
+library(exams)
+
+n <- sample(20:30, 1)
+mean_x <- sample(seq(70, 80, by = 0.5), 1)
+choices <- c("t-test", "chi-squared test", "Wilcoxon signed-rank test")
+
+# Inside the exercise body:
+# How many observations are in the sample? `r add_cloze(n)`
+# What is the sample mean? `r add_cloze(mean_x, tolerance = 0.1, digits = 1)`
+# Which method is appropriate? `r add_cloze(choices[1], choices, type = "schoice")`
+#
+# Meta-information:
+# exclozetype: `r format_metainfo("type")`
+# exsolution: `r format_metainfo("solution")`
+# extol: `r format_metainfo("tolerance")`
+```
+
+See the bundled file `stats_cloze.Rmd` for a full, self-contained example.
+
+## Choice questions
+
+Single-choice and multiple-choice questions follow the standard `R/exams`
+pattern with `answerlist()` in the question and a logical answer key in the
+solution block.
+
+````markdown
+Question
+========
+Which statement about p-values is correct?
+
+```{r questionlist, echo = FALSE, results = "asis"}
+exams::answerlist(c(
+  "A p-value below 0.05 can justify rejection at the 5% level.",
+  "A p-value is the probability that the null hypothesis is true.",
+  "A p-value cannot depend on the sample size."
+), markup = "markdown")
+```
+
+Solution
+========
+```{r solutionlist, echo = FALSE, results = "asis"}
+exams::answerlist(c("True", "False", "False"), markup = "markdown")
+```
+````
+
+## Points and metadata
+
+If you want imports to arrive with explicit scoring in ILIAS, include
+`expoints` in the exercise metadata.
+
+```{r}
+Meta-information
+================
+extype: schoice
+exsolution: 100
+exname: P-value interpretation
+exshuffle: TRUE
+expoints: 1
+```
+
+For cloze exercises with several gaps, you can provide one point value per gap.

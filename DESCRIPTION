@@ -33,7 +33,13 @@ Imports:
     tools,
     utils
 Suggests:
+    knitr,
+    pkgdown,
+    rmarkdown,
     testthat (>= 3.0.0)
-URL: https://github.com/mchlbckr/exams2ilias
+VignetteBuilder: knitr
+URL: https://github.com/mchlbckr/exams2ilias,
+    https://buecker.ms/exams2ilias/
 BugReports: https://github.com/mchlbckr/exams2ilias/issues
+Config/Needs/website: pkgdown
 Config/testthat/edition: 3

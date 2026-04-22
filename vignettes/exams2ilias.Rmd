@@ -1,0 +1,79 @@
+---
+title: "Get started with exams2ilias"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Get started with exams2ilias}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  eval = FALSE
+)
+```
+
+`exams2ilias` exports exercises from `R/exams` to ILIAS question pools. The
+package keeps the ILIAS-specific QTI 1.2 logic in one place and currently
+targets the import structure validated against ILIAS 9.17.
+
+## Install
+
+Until the package is released on CRAN, install it from GitHub:
+
+```{r}
+remotes::install_github("mchlbckr/exams2ilias")
+```
+
+## Minimal export
+
+The central interface is `exams2ilias()`. A minimal export only needs an
+exercise file, an output directory, and a name for the resulting question pool.
+
+```{r}
+library(exams2ilias)
+
+outdir <- tempfile("ilias-")
+dir.create(outdir)
+
+exams2ilias(
+  system.file("exercises/lm.Rmd", package = "exams"),
+  n = 1,
+  dir = outdir,
+  name = "lm_ilias"
+)
+```
+
+This creates a ZIP file that can be imported into an ILIAS question pool.
+
+## Internal template
+
+By default, the package uses the bundled ILIAS template alias `"ilias"`, which
+currently resolves to the internal template for ILIAS 9.17. You only need to
+set `template` explicitly if you want to use your own XML template file.
+
+```{r}
+exams2ilias(
+  system.file("examples", "stats_cloze.Rmd", package = "exams2ilias"),
+  n = 1,
+  dir = outdir,
+  name = "stats_cloze",
+  xmlcollapse = FALSE,
+  solutionswitch = FALSE
+)
+```
+
+## Bundled examples
+
+The package ships with self-contained statistics examples for the main exercise
+types:
+
+```{r}
+example_dir <- system.file("examples", package = "exams2ilias")
+list.files(example_dir, pattern = "\\.[Rr]md$", full.names = TRUE)
+```
+
+These examples are intended both as smoke-tested templates and as a starting
+point for your own question authoring workflow.

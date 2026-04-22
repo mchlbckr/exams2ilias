@@ -1,0 +1,71 @@
+---
+title: "Working with bundled examples"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Working with bundled examples}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  eval = FALSE
+)
+```
+
+The package includes a small set of self-contained example exercises in
+`inst/examples`. These are useful for testing a fresh installation or for
+bootstrapping your own authoring workflow.
+
+## Locate the examples
+
+```{r}
+example_dir <- system.file("examples", package = "exams2ilias")
+list.files(example_dir, full.names = TRUE)
+```
+
+## Export one example
+
+```{r}
+library(exams2ilias)
+
+outdir <- tempfile("ilias-")
+dir.create(outdir)
+
+exams2ilias(
+  file.path(example_dir, "stats_schoice.Rmd"),
+  n = 1,
+  dir = outdir,
+  name = "stats_schoice",
+  xmlcollapse = FALSE,
+  solutionswitch = FALSE
+)
+```
+
+## Export the full example set
+
+The helper script `generate_examples.R` exports each bundled example
+individually and can also create one combined question pool.
+
+```{r}
+source(file.path(example_dir, "generate_examples.R"))
+
+outdir <- tempfile("ilias-examples-")
+dir.create(outdir)
+
+generate_example_exports(outdir)
+```
+
+## Adapt an example for your own pool
+
+A practical workflow is:
+
+1. Start from the closest bundled example.
+2. Replace the statistical scenario and answer logic.
+3. Keep the metadata structure intact.
+4. Export one question first and test the import in ILIAS.
+5. Only then batch-export larger question sets.
+
+This keeps debugging cheap and avoids importing many broken items at once.

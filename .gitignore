@@ -5,3 +5,5 @@
 .Rproj.user
 *.Rproj
 *.tar.gz
+docs/
+.pkgdown/
