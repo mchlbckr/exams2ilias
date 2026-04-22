@@ -3,6 +3,10 @@ url: https://buecker.ms/exams2ilias/
 template:
   bootstrap: 5
 
+authors:
+  sidebar:
+    roles: [aut, ctb]
+
 home:
   title: exams2ilias
   description: Export R/exams question pools to ILIAS with an ILIAS-specific QTI 1.2 rendering path.

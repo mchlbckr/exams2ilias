@@ -21,4 +21,9 @@ The authors credited for exams in its DESCRIPTION file are:
   Florian Wickelmaier
   Sebastian Bachler
 
-The exams2ilias package itself is maintained by Michael Bücker.
+The exams2ilias package itself was created and is maintained by Michael
+Bücker, with additional code contributions by Amar Jeeth.
+
+Copyright in original and modified portions remains with the respective
+authors and contributors. In particular, copyright in code adapted from
+exams remains with the original copyright holders of those portions.
