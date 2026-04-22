@@ -1,11 +1,16 @@
 Package: exams2ilias
-Title: ILIAS Export Interface for R/exams
+Title: ILIAS Export Interface for R/Exams
 Version: 0.0.1
 Authors@R: c(
     person(
       "Michael", "Bücker",
       email = "michael.buecker@fh-muenster.de",
       role = c("aut", "cre", "cph")
+    ),
+    person(
+      "Amar", "Jeeth",
+      email = "aj349177@fh-muenster.de",
+      role = "ctb"
     ),
     person(
       "Achim", "Zeileis",
@@ -21,10 +26,11 @@ Authors@R: c(
   )
 Description: Utilities for exporting exercises from 'R/exams' to
     question pools for the learning management system 'ILIAS'. The
-    package provides an 'ILIAS'-specific QTI 1.2 rendering path and
-    writes the question-pool XML layout validated for imports in
-    'ILIAS' 9.17. Supported exercise types include cloze, single-choice,
-    multiple-choice, numeric, and string questions.
+    package implements a Question and Test Interoperability 1.2
+    rendering path tailored to 'ILIAS' and writes the question-pool XML
+    layout validated for imports in 'ILIAS' 9.17. Supported exercise
+    types include single-choice, multiple-choice, numeric, string, and
+    combined gap questions.
 License: GPL-2 | GPL-3
 Encoding: UTF-8
 Imports:
