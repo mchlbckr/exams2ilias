@@ -4,9 +4,7 @@
 
 ## R CMD check results
 
-* 0 errors | 0 warnings | 1 note
-* Remaining note on the local machine:
-  * `unable to verify current time`
+* 0 errors | 0 warnings | 0 notes
 
 ## Package purpose
 
@@ -16,5 +14,8 @@ path validated against `ILIAS` 9.17.
 
 ## Additional checks
 
-* win-builder (R-devel): pending
+* win-builder (R-devel, R 4.6.0 RC, Windows Server 2022): 1 NOTE
+  * The only NOTE is a CRAN incoming spelling hint for the domain-specific
+    system name `ILIAS` in `DESCRIPTION`.
+  * No errors or warnings were reported by win-builder.
 * additional cross-platform check (e.g. R-hub): pending
