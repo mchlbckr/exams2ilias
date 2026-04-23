@@ -18,4 +18,6 @@ path validated against `ILIAS` 9.17.
   * The only NOTE is a CRAN incoming spelling hint for the domain-specific
     system name `ILIAS` in `DESCRIPTION`.
   * No errors or warnings were reported by win-builder.
-* additional cross-platform check (e.g. R-hub): pending
+* R-hub (`ubuntu-release`, Ubuntu 24.04.4 LTS, R 4.5.3): Status OK
+  * No errors, warnings, or notes were reported by the R-hub check.
+  * Workflow run: <https://github.com/mchlbckr/exams2ilias/actions/runs/24819446978>
