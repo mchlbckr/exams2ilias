@@ -31,7 +31,9 @@ Description: Utilities for exporting exercises from 'R/exams' to
     rendering path tailored to 'ILIAS' and writes the question-pool XML
     layout validated for imports in 'ILIAS' 9.17. Supported exercise
     types include single-choice, multiple-choice, numeric, string, and
-    combined gap questions.
+    combined gap questions. The underlying 'R/exams' framework is
+    described in Zeileis, Umlauf, and Leisch (2014)
+    <doi:10.18637/jss.v058.i01>.
 License: GPL-2 | GPL-3
 Encoding: UTF-8
 Imports:

@@ -88,7 +88,7 @@ exams::answerlist(c("True", "False", "False"), markup = "markdown")
 If you want imports to arrive with explicit scoring in ILIAS, include
 `expoints` in the exercise metadata.
 
-```{r}
+````markdown
 Meta-information
 ================
 extype: schoice
@@ -96,6 +96,6 @@ exsolution: 100
 exname: P-value interpretation
 exshuffle: TRUE
 expoints: 1
-```
+````
 
 For cloze exercises with several gaps, you can provide one point value per gap.
