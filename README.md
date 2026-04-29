@@ -1,5 +1,20 @@
 # exams2ilias
 
+<!-- badges: start -->
+
+[![CRAN
+status](https://www.r-pkg.org/badges/version/exams2ilias)](https://CRAN.R-project.org/package=exams2ilias)
+[![CRAN
+downloads](https://cranlogs.r-pkg.org/badges/grand-total/exams2ilias)](https://CRAN.R-project.org/package=exams2ilias)
+[![R-CMD-check](https://github.com/mchlbckr/exams2ilias/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/mchlbckr/exams2ilias/actions/workflows/R-CMD-check.yaml)
+[![License:
+GPL-2 | GPL-3](https://img.shields.io/badge/License-GPL--2%20%7C%20GPL--3-blue.svg)](https://www.r-project.org/Licenses/)
+[![GitHub
+issues](https://img.shields.io/github/issues/mchlbckr/exams2ilias)](https://github.com/mchlbckr/exams2ilias/issues)
+[![GitHub
+stars](https://img.shields.io/github/stars/mchlbckr/exams2ilias?style=social)](https://github.com/mchlbckr/exams2ilias/stargazers)
+<!-- badges: end -->
+
 `exams2ilias` is a small standalone R package that builds ILIAS question pool
 exports on top of [`exams`](https://www.r-exams.org/) while keeping the
 ILIAS-specific QTI rendering logic inside this package. Version `0.0.1`
