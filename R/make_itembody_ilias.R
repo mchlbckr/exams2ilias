@@ -1,62 +1,11 @@
-ilias_make_id <- function(size, n = 1L) {
-  if(is.null(n)) n <- 1L
-  rval <- matrix(sample(0:9, size * n, replace = TRUE), ncol = n, nrow = size)
-  colSums(rval * 10^((size - 1L):0L))
-}
-
-ilias_delete_NULLs <- function(x.list) {
-  rval <- x.list[unlist(lapply(x.list, length) != 0)]
-  if(length(rval)) rval else NULL
-}
-
-ilias_exams2qti12 <- function(file, n = 1L, nsamp = NULL, dir = ".",
-  name = NULL, quiet = TRUE, edir = NULL, tdir = NULL, sdir = NULL, verbose = FALSE, rds = FALSE,
-  seed = NULL, resolution = 100, width = 4, height = 4, svg = FALSE, encoding = "UTF-8",
-  num = NULL, mchoice = NULL, schoice = mchoice, string = NULL, cloze = NULL,
-  template = "qti12", duration = NULL, stitle = "Exercise", ititle = "Question",
-  adescription = "Please solve the following exercises.",
-  sdescription = "Please answer the following question.",
-  maxattempts = 1, cutvalue = 0, solutionswitch = TRUE, zip = TRUE,
-  points = NULL, eval = list(partial = TRUE, rule = "false2", negative = FALSE),
-  converter = NULL, envir = NULL, engine = NULL, xmlcollapse = FALSE,
-  flavor = c("plain", "openolat", "canvas", "ilias"), ...)
-{
-  flavor <- "ilias"
-
-  itembody <- list(num = num, mchoice = mchoice, schoice = schoice, cloze = cloze, string = string)
-  for(i in c("num", "mchoice", "schoice", "cloze", "string")) {
-    if(is.null(itembody[[i]])) itembody[[i]] <- list()
-    if(is.list(itembody[[i]])) {
-      if(is.null(itembody[[i]]$eval)) itembody[[i]]$eval <- eval
-      itembody[[i]]$flavor <- flavor
-      itembody[[i]] <- do.call(ilias_make_itembody_qti12, itembody[[i]])
-    }
-    if(!is.function(itembody[[i]])) stop(sprintf("wrong specification of %s", sQuote(i)))
-  }
-
-  exams::exams2qti12(
-    file = file, n = n, nsamp = nsamp, dir = dir,
-    name = name, quiet = quiet, edir = edir, tdir = tdir, sdir = sdir, verbose = verbose,
-    rds = rds, seed = seed, resolution = resolution, width = width, height = height,
-    svg = svg, encoding = encoding, num = itembody$num, mchoice = itembody$mchoice,
-    schoice = itembody$schoice, string = itembody$string, cloze = itembody$cloze,
-    template = template, duration = duration, stitle = stitle, ititle = ititle,
-    adescription = adescription, sdescription = sdescription, maxattempts = maxattempts,
-    cutvalue = cutvalue, solutionswitch = solutionswitch, zip = zip, points = points,
-    eval = eval, converter = converter, envir = envir, engine = engine,
-    xmlcollapse = xmlcollapse, flavor = flavor, ...
-  )
-}
-
-ilias_make_itembody_qti12 <- function(rtiming = FALSE, shuffle = FALSE, rshuffle = shuffle,
+make_itembody_ilias <- function(rtiming = FALSE, shuffle = FALSE, rshuffle = shuffle,
   minnumber = NULL, maxnumber = NULL, defaultval = NULL, minvalue = NULL,
   maxvalue = NULL, cutvalue = NULL, enumerate = FALSE, digits = NULL, tolerance = is.null(digits),
   fix_num = FALSE, maxchars = c(32, 1, 12),
-  eval = list(partial = TRUE, rule = "false2", negative = FALSE),
-  flavor = c("plain", "openolat", "canvas", "ilias"))
+  eval = list(partial = TRUE, rule = "false2", negative = FALSE))
 {
   function(x) {
-    flavor <- match.arg(flavor, "ilias")
+    flavor <- "ilias"
 
     points <- if(is.null(x$metainfo$points)) 1 else x$metainfo$points
 

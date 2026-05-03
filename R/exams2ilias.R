@@ -1,6 +1,6 @@
 exams2ilias <- function(file, n = 1L, nsamp = NULL, dir = ".",
   name = NULL, quiet = TRUE, edir = NULL, tdir = NULL, sdir = NULL, verbose = FALSE,
-  resolution = 100, width = 4, height = 4, svg = FALSE, encoding = "UTF-8",
+  resolution = 100, width = 4, height = 4, svg = FALSE,
   num = list(fix_num = FALSE, minvalue = NA),
   mchoice = list(maxchars = c(3, NA, 3), minvalue = NA),
   schoice = mchoice, string = NULL, cloze = NULL,
@@ -13,6 +13,20 @@ exams2ilias <- function(file, n = 1L, nsamp = NULL, dir = ".",
   converter = "pandoc-mathjax", xmlcollapse = TRUE,
   metasolution = FALSE, ...)
 {
+  ## resolve ILIAS XML template
+  if(is.null(name)) name <- gsub("\\.xml$", "", basename(template))
+  template <- ilias_resolve_template(template)
+
+  ## directory handling
+  outdir <- file_path_as_absolute(dir)
+  dir.create(workdir <- tempfile())
+  on.exit(unlink(workdir, recursive = TRUE), add = TRUE)
+
+  ## maxattampts as passed on to exams2qti12
+  maxattempts_qti12 <- maxattempts
+  maxattempts_qti12[is.infinite(maxattempts_qti12) | maxattempts_qti12 == 0] <- 1
+
+  ## processing of itembody types
   if(is.null(num)) {
     num <- list(fix_num = FALSE, minvalue = NA)
   } else {
@@ -31,31 +45,30 @@ exams2ilias <- function(file, n = 1L, nsamp = NULL, dir = ".",
     schoice$maxchars <- c(3, NA, 3)
     schoice$minvalue <- NA
   }
+  itembody <- list(num = num, mchoice = mchoice, schoice = schoice, cloze = cloze, string = string)
+  for(i in c("num", "mchoice", "schoice", "cloze", "string")) {
+    if(is.null(itembody[[i]])) itembody[[i]] <- list()
+    if(is.list(itembody[[i]])) {
+      if(is.null(itembody[[i]]$eval)) itembody[[i]]$eval <- eval
+      itembody[[i]] <- do.call(make_itembody_ilias, itembody[[i]])
+    }
+    if(!is.function(itembody[[i]])) stop(sprintf("wrong specification of %s", sQuote(i)))
+  }
 
-  if(is.null(name)) name <- gsub("\\.xml$", "", basename(template))
-  template <- ilias_resolve_template(template)
-
-  ## employ Base 64 encoding for all supplementary files
-  base64 <- TRUE
-
-  outdir <- tools::file_path_as_absolute(dir)
-  dir.create(workdir <- tempfile())
-  on.exit(unlink(workdir, recursive = TRUE), add = TRUE)
-
-  maxattempts_qti12 <- maxattempts
-  maxattempts_qti12[is.infinite(maxattempts_qti12) | maxattempts_qti12 == 0] <- 1
-
-  rval <- ilias_exams2qti12(file = file, n = n, nsamp = nsamp, dir = workdir,
+  ## call exams2qti12 from exams
+  rval <- exams2qti12(
+    file = file, n = n, nsamp = nsamp, dir = workdir,
     name = name, quiet = quiet, edir = edir, tdir = tdir, sdir = sdir, verbose = verbose,
-    resolution = resolution, width = width, height = height, svg = svg, encoding = encoding,
-    num = num, mchoice = mchoice, schoice = schoice, string = string, cloze = cloze,
-    template = template,
-    duration = duration, stitle = stitle, ititle = ititle,
-    adescription = adescription, sdescription = sdescription,
-    maxattempts = maxattempts_qti12, cutvalue = cutvalue, solutionswitch = solutionswitch, zip = FALSE,
-    points = points, eval = eval, converter = converter, xmlcollapse = FALSE,
-    base64 = base64, flavor = "ilias", ...)
+    resolution = resolution, width = width, height = height, svg = svg, encoding = "UTF-8",
+    num = itembody$num, mchoice = itembody$mchoice, schoice = itembody$schoice,
+    string = itembody$string, cloze = itembody$cloze,
+    template = template, duration = duration, stitle = stitle, ititle = ititle,
+    adescription = adescription, sdescription = sdescription, maxattempts = maxattempts_qti12,
+    cutvalue = cutvalue, solutionswitch = solutionswitch, zip = FALSE,
+    points = points, eval = eval, converter = converter,
+    xmlcollapse = FALSE, base64 = TRUE, flavor = "ilias", ...)
 
+  ## post-process QTI 1.2 XML files
   qti12_path <- file.path(workdir, paste0(name, ".xml"))
   xml <- readLines(qti12_path, warn = FALSE)
   items <- extract_qti12_items(xml)
@@ -109,6 +122,7 @@ exams2ilias <- function(file, n = 1L, nsamp = NULL, dir = ".",
   )
   qti_xml <- ilias_collapse_xml(qti_xml, xmlcollapse)
 
+  ## zip final post-processed XML files
   if(zip) {
     pkgdir <- file.path(workdir, name)
     dir.create(pkgdir)
@@ -121,12 +135,13 @@ exams2ilias <- function(file, n = 1L, nsamp = NULL, dir = ".",
     setwd(workdir)
     on.exit(setwd(owd), add = TRUE)
     file.rename(name, paste0(name, "_qpl"))
-    utils::zip(zipfile = paste0(name, "_qpl.zip"), files = paste0(name, "_qpl"))
+    zip(zipfile = paste0(name, "_qpl.zip"), files = paste0(name, "_qpl"))
     file.copy(file.path(workdir, paste0(name, "_qpl.zip")),
       file.path(outdir, paste0(name, "_qpl.zip")), overwrite = TRUE)
   } else {
     writeLines(qti_xml, file.path(outdir, paste0(name, ".xml")))
   }
 
+  ## return exams list
   invisible(rval)
 }

@@ -2,6 +2,17 @@
   is.null(x) || anyNA(x) || all(grepl("^[[:space:]]*$", x))
 }
 
+ilias_make_id <- function(size, n = 1L) {
+  if(is.null(n)) n <- 1L
+  rval <- matrix(sample(0:9, size * n, replace = TRUE), ncol = n, nrow = size)
+  colSums(rval * 10^((size - 1L):0L))
+}
+
+ilias_delete_NULLs <- function(x.list) {
+  rval <- x.list[unlist(lapply(x.list, length) != 0)]
+  if(length(rval)) rval else NULL
+}
+
 ilias_resolve_template <- function(template) {
   if(identical(template, "ilias") || identical(template, "ilias_9_17")) {
     path <- system.file("xml", "ilias_9_17.xml", package = "exams2ilias")
@@ -480,8 +491,6 @@ solustr_to_phpstruct <- function(solustr, nitems, encode = TRUE) {
     )
   }
   rval <- c(charToRaw(paste0('a:', nitems, ':{')), items, charToRaw('}'))
-  if(encode) {
-    rval <- base64enc::base64encode(rval)
-  }
+  if (encode) rval <- base64encode(rval)
   rval
 }
