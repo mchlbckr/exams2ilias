@@ -35,7 +35,8 @@ exams2ilias <- function(file, n = 1L, nsamp = NULL, dir = ".",
   if(is.null(name)) name <- gsub("\\.xml$", "", basename(template))
   template <- ilias_resolve_template(template)
 
-  base64 <- .fileURI_mime_types[, "ext"]
+  ## employ Base 64 encoding for all supplementary files
+  base64 <- TRUE
 
   outdir <- tools::file_path_as_absolute(dir)
   dir.create(workdir <- tempfile())
