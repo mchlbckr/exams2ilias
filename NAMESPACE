@@ -1,1 +1,10 @@
-export(exams2ilias)
+importFrom("exams",
+  "exams2qti12", "exams_eval")
+importFrom("tools",
+  "file_path_as_absolute")
+importFrom("utils",
+  "zip")
+importFrom("base64enc",
+  "base64encode")
+
+export("exams2ilias")
