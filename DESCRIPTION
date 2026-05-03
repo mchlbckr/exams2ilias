@@ -23,6 +23,12 @@ Authors@R: c(
       "Florian", "Wickelmaier",
       email = "Florian.Wickelmaier@uni-tuebingen.de",
       role = "ctb"
+    ),
+    person(
+      "Nikolaus", "Umlauf",
+      email = "Nikolaus.Umlauf@uibk.ac.at",
+      role = "ctb",
+      comment = c(ORCID = "0000-0003-2160-9803")
     )
   )
 Description: Utilities for exporting exercises from 'R/exams' to
