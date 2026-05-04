@@ -17,13 +17,13 @@ stars](https://img.shields.io/github/stars/mchlbckr/exams2ilias?style=social)](h
 
 `exams2ilias` is a small standalone R package that builds ILIAS question pool
 exports on top of [`exams`](https://www.r-exams.org/) while keeping the
-ILIAS-specific QTI rendering logic inside this package. Version `0.0.1`
-focuses on the export structure that was validated against `ILIAS 9.17`.
+ILIAS-specific QTI rendering logic inside this package. The export structure
+is validated against `ILIAS 9.17`.
 
 ## Install
 
 ```r
-remotes::install_github("mchlbckr/exams2ilias")
+install.packages("exams2ilias")
 ```
 
 ## Minimal example
@@ -35,27 +35,31 @@ outdir <- tempfile("ilias-")
 dir.create(outdir)
 
 exams2ilias(
-  system.file("exercises/lm.Rmd", package = "exams"),
+  "lm.Rmd",
   n = 1,
   dir = outdir,
   name = "lm_ilias"
 )
 ```
 
-## Bundled examples
+Exercises bundled with `exams` can be addressed by file name, such as
+`"lm.Rmd"`, `"ttest.Rmd"`, or `"boxplots.Rmd"`. Use `system.file()` only when
+you want to reference exercises bundled with `exams2ilias` itself.
 
-The package bundles self-contained statistics examples for the main question
+## Bundled exercises
+
+The package bundles self-contained statistics exercises for the main question
 types supported by `exams2ilias`:
 
 ```r
-example_dir <- system.file("examples", package = "exams2ilias")
+example_dir <- system.file("exercises", package = "exams2ilias")
 list.files(example_dir, pattern = "\\.[Rr]md$", full.names = TRUE)
 ```
 
 These include `stats_cloze.Rmd`, `stats_schoice.Rmd`, `stats_mchoice.Rmd`,
 `stats_num.Rmd`, and `stats_string.Rmd`.
 
-To export the full example set, source the bundled helper script:
+To export the full set, source the bundled helper script:
 
 ```r
 source(file.path(example_dir, "generate_examples.R"))
@@ -69,7 +73,7 @@ generate_example_exports(outdir)
 This writes one `_qpl.zip` per example and an additional combined
 `stats_examples_qpl.zip` to `outdir`.
 
-You can also export a single example directly:
+You can also export a single exercise directly:
 
 ```r
 library(exams2ilias)
@@ -89,3 +93,14 @@ exams2ilias(
 
 The cloze example uses `exams::add_cloze()` and `format_metainfo()` so it can
 serve as a template for new ILIAS-ready cloze exercises.
+
+## ILIAS authoring notes
+
+ILIAS renders dropdown labels as plain text. Avoid HTML and math markup in
+choice-based cloze gaps; `exams2ilias` removes unsupported HTML tags from these
+labels and emits a warning.
+
+Static files should be registered as supplements, for example with
+`exams::include_supplement("figure.png")`. Files created during exercise
+processing, such as plots and CSV files written by the exercise, are handled as
+supplements automatically and embedded via Base64 where possible.

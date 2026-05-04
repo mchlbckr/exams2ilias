@@ -85,6 +85,80 @@ ilias_format_value <- function(x) {
   trimws(format(x, scientific = FALSE, trim = TRUE))
 }
 
+ilias_decode_entities <- function(x) {
+  x <- gsub("&nbsp;", " ", x, fixed = TRUE)
+  x <- gsub("&lt;", "<", x, fixed = TRUE)
+  x <- gsub("&gt;", ">", x, fixed = TRUE)
+  x <- gsub("&quot;", '"', x, fixed = TRUE)
+  x <- gsub("&#39;", "'", x, fixed = TRUE)
+  x <- gsub("&#x27;", "'", x, fixed = TRUE)
+  gsub("&amp;", "&", x, fixed = TRUE)
+}
+
+ilias_plain_text <- function(x) {
+  if(is.null(x)) return(x)
+  x <- gsub("(?i)<br\\s*/?>", "\n", x, perl = TRUE)
+  x <- gsub("(?i)</p\\s*>", "\n", x, perl = TRUE)
+  x <- gsub("(?i)</li\\s*>", "\n", x, perl = TRUE)
+  x <- gsub("<[^>]+>", "", x, perl = TRUE)
+  trimws(ilias_decode_entities(x))
+}
+
+ilias_warn_choice_markup <- function(original, plain, warn_env = NULL) {
+  has_markup <- any(!is.na(original) & grepl("<[^>]+>", original, perl = TRUE))
+  changed <- any(!is.na(original) & !is.na(plain) & original != plain)
+  if(!has_markup || !changed) return(invisible(FALSE))
+  if(!is.null(warn_env) && isTRUE(warn_env$choice_markup)) return(invisible(FALSE))
+
+  warning(
+    "ILIAS dropdown gaps support plain text only; HTML markup was removed from cloze choice labels.",
+    call. = FALSE
+  )
+  if(!is.null(warn_env)) warn_env$choice_markup <- TRUE
+  invisible(TRUE)
+}
+
+ilias_fix_pre_lines <- function(x, bol = "", sep = "<br/>") {
+  pre_start <- grep("(<pre>)|(<pre )", x)
+  x[pre_start] <- gsub("<pre [^>]*>", "<pre>", x[pre_start])
+  pre_end <- grep("</pre>", x, fixed = TRUE)
+  if(length(pre_start) > 0L) {
+    pndc <- any(grepl("<code>", x[pre_start]))
+    for(i in seq_along(pre_start)) {
+      pre_start_i <- pre_start[i] + 1L - pndc
+      pre_end_i <- pre_end[i] - 2L * (1L - pndc)
+      if(pre_end_i >= pre_start_i) x[pre_start_i:pre_end_i] <- paste0(bol, x[pre_start_i:pre_end_i], sep)
+    }
+    if(nchar(bol) > 0L) {
+      x[pre_start] <- gsub("<pre>|<code>", "", x[pre_start])
+      x[pre_end] <- gsub("</pre>|</code>", "", x[pre_end])
+    } else {
+      x[pre_start] <- gsub("<code>", "", x[pre_start], fixed = TRUE)
+      x[pre_end] <- gsub("</code>", "", x[pre_end], fixed = TRUE)
+      x[pre_start] <- gsub("<pre>", paste0("<pre><code style=\"font-family: 'courier';\">", if(pndc) "&nbsp;"), x[pre_start], fixed = TRUE)
+      x[pre_end] <- gsub("</pre>", "</code></pre>", x[pre_end], fixed = TRUE)
+    }
+  }
+  x
+}
+
+ilias_flatten_ordered_lists <- function(text) {
+  if(is.null(text)) return(text)
+  text <- paste(text, collapse = "\n")
+  pattern <- "(?is)<ol[^>]*>.*?</ol>"
+  repeat {
+    m <- regexpr(pattern, text, perl = TRUE)
+    if(m[1L] < 0L) break
+    block <- regmatches(text, m)
+    items <- regmatches(block, gregexpr("(?is)<li[^>]*>.*?</li>", block, perl = TRUE))[[1L]]
+    items <- gsub("(?is)^<li[^>]*>", "", items, perl = TRUE)
+    items <- gsub("(?is)</li>$", "", items, perl = TRUE)
+    repl <- paste(paste0(seq_along(items), ". ", items), collapse = "\n")
+    regmatches(text, m) <- repl
+  }
+  text
+}
+
 ilias_item_header <- function(id, title, maxattempts = NULL) {
   attr <- if(is.null(maxattempts)) "" else paste0(" ", maxattempts)
   paste0('<item ident="', ilias_escape_attribute(id),
@@ -159,7 +233,7 @@ patch_item_ilias <- function(item_xml, item_id, title, questiontype, maxattempts
     rval[p[1L]] <- paste0('<presentation label="', ilias_escape_attribute(title), '">')
   }
 
-  rval
+  ilias_fix_pre_lines(rval)
 }
 
 ilias_questionlist <- function(x) {
@@ -218,7 +292,8 @@ ilias_material <- function(text, keep_whitespace = FALSE) {
   )
 }
 
-ilias_gap_xml <- function(type, gap_id, choices, solution, tolerance, points, maxchars) {
+ilias_gap_xml <- function(type, gap_id, choices, solution, tolerance, points, maxchars,
+  warn_env = NULL) {
   if(type %in% c("essay", "file", "verbatim")) {
     warning("ILIAS cloze export treats cloze type '", type, "' as a string gap")
     type <- "string"
@@ -282,6 +357,10 @@ ilias_gap_xml <- function(type, gap_id, choices, solution, tolerance, points, ma
   }
 
   if(!length(choices)) choices <- as.character(seq_along(solution))
+  original_choices <- choices
+  choices <- ilias_plain_text(choices)
+  ilias_warn_choice_markup(original_choices, choices, warn_env)
+
   correct <- ilias_choice_solution(solution)
   if(length(correct) != length(choices)) {
     stop("choice-based cloze gap has mismatched choices and solution length")
@@ -331,6 +410,8 @@ make_item_ilias_cloze <- function(item_xml, x, item_id, title, maxattempts = 0) 
 
   points <- if(is.null(x$metainfo$points)) rep(1, n) else x$metainfo$points
   q_points <- rep(points, length.out = n)
+  warn_env <- new.env(parent = emptyenv())
+  warn_env$choice_markup <- FALSE
 
   presentation <- c(
     paste0('<presentation label="', ilias_escape_attribute(title), '">'),
@@ -344,6 +425,7 @@ make_item_ilias_cloze <- function(item_xml, x, item_id, title, maxattempts = 0) 
   )
 
   question <- if(!is.null(x$question)) paste(x$question, collapse = "\n") else NULL
+  question <- ilias_flatten_ordered_lists(question)
   has_answertags <- !is.null(question) && grepl("##ANSWER[0-9]+##", question)
 
   if(has_answertags) {
@@ -361,7 +443,7 @@ make_item_ilias_cloze <- function(item_xml, x, item_id, title, maxattempts = 0) 
       if(i < 1L || i > n) stop("invalid ##ANSWER tag in cloze question")
       presentation <- c(presentation, ilias_material(parts[k], keep_whitespace = TRUE))
       gap_xml <- ilias_gap_xml(type[i], paste0("gap_", i - 1L), questionlist[[i]],
-        solution[[i]], tol[[i]], q_points[i], maxchars[[i]])
+        solution[[i]], tol[[i]], q_points[i], maxchars[[i]], warn_env = warn_env)
       presentation <- c(presentation, gap_xml$presentation)
       resprocessing <- c(resprocessing, gap_xml$resprocessing)
     }
@@ -373,7 +455,7 @@ make_item_ilias_cloze <- function(item_xml, x, item_id, title, maxattempts = 0) 
         presentation <- c(presentation, ilias_material(questionlist[[i]]))
       }
       gap_xml <- ilias_gap_xml(type[i], paste0("gap_", i - 1L), questionlist[[i]],
-        solution[[i]], tol[[i]], q_points[i], maxchars[[i]])
+        solution[[i]], tol[[i]], q_points[i], maxchars[[i]], warn_env = warn_env)
       presentation <- c(presentation, gap_xml$presentation)
       resprocessing <- c(resprocessing, gap_xml$resprocessing)
     }
@@ -402,6 +484,8 @@ ilias_collapse_xml <- function(xml, xmlcollapse) {
 make_qpl_xml <- function(name, qrefs, pool_id = paste0(name, "_qpl")) {
   xml <- c(
     '<?xml version="1.0" encoding="utf-8"?>',
+    ## Keep the historic ILIAS export DOCTYPE: the public DTD URL currently
+    ## returns 404, but ILIAS 9.17 imports this structure successfully.
     '<!DOCTYPE Test SYSTEM "http://www.ilias.uni-koeln.de/download/dtd/ilias_co.dtd">',
     '<!--Export of ILIAS Test Questionpool 3029 of installation .-->',
     '<ContentObject Type="Questionpool_Test">',
@@ -469,6 +553,8 @@ solution_to_qtimetadata <- function(name, exm, path = ".") {
 }
 
 solustr_to_phpstruct <- function(solustr, nitems, encode = TRUE) {
+  ## ILIAS stores term scoring solutions as Base64-encoded serialized PHP
+  ## ASS_AnswerMultipleResponseImage objects in qtimetadata.
   items <- raw(0)
   for(i in seq_len(nitems)) {
     items <- c(items,

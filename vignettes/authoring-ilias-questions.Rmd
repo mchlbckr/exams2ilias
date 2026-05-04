@@ -60,27 +60,28 @@ See the bundled file `stats_cloze.Rmd` for a full, self-contained example.
 ## Choice questions
 
 Single-choice and multiple-choice questions follow the standard `R/exams`
-pattern with `answerlist()` in the question and a logical answer key in the
-solution block.
+pattern with an answer list in the question and a logical answer key in the
+solution block. For static answer lists, plain Markdown is sufficient.
 
 ````markdown
 Question
 ========
 Which statement about p-values is correct?
 
-```{r questionlist, echo = FALSE, results = "asis"}
-exams::answerlist(c(
-  "A p-value below 0.05 can justify rejection at the 5% level.",
-  "A p-value is the probability that the null hypothesis is true.",
-  "A p-value cannot depend on the sample size."
-), markup = "markdown")
-```
+Answerlist
+----------
+* A p-value below 0.05 can justify rejection at the 5% level.
+* A p-value is the probability that the null hypothesis is true.
+* A p-value cannot depend on the sample size.
 
 Solution
 ========
-```{r solutionlist, echo = FALSE, results = "asis"}
-exams::answerlist(c("True", "False", "False"), markup = "markdown")
-```
+
+Answerlist
+----------
+* True
+* False
+* False
 ````
 
 ## Points and metadata
@@ -99,3 +100,31 @@ expoints: 1
 ````
 
 For cloze exercises with several gaps, you can provide one point value per gap.
+
+## ILIAS-specific restrictions
+
+Choice-based cloze gaps are rendered as ILIAS dropdowns. ILIAS displays these
+labels as plain text, so avoid HTML and math markup in the answer options.
+`exams2ilias` removes unsupported HTML tags from dropdown labels and emits a
+warning.
+
+For static external files, register the file as a supplement before linking it:
+
+````markdown
+```{r, echo = FALSE, results = "hide"}
+exams::include_supplement("figure.png")
+```
+
+Question
+========
+![](figure.png)
+````
+
+Plots and files created while processing the exercise are handled as
+supplements automatically.
+
+## Solution metadata
+
+`metasolution = TRUE` adds ILIAS solution metadata for essay/string-like
+questions. It is disabled by default and internally uses the PHP-serialized
+solution structure expected by ILIAS.
