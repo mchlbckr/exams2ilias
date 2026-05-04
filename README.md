@@ -44,22 +44,22 @@ exams2ilias(
 
 Exercises bundled with `exams` can be addressed by file name, such as
 `"lm.Rmd"`, `"ttest.Rmd"`, or `"boxplots.Rmd"`. Use `system.file()` only when
-you want to reference examples bundled with `exams2ilias` itself.
+you want to reference exercises bundled with `exams2ilias` itself.
 
-## Bundled examples
+## Bundled exercises
 
-The package bundles self-contained statistics examples for the main question
+The package bundles self-contained statistics exercises for the main question
 types supported by `exams2ilias`:
 
 ```r
-example_dir <- system.file("examples", package = "exams2ilias")
+example_dir <- system.file("exercises", package = "exams2ilias")
 list.files(example_dir, pattern = "\\.[Rr]md$", full.names = TRUE)
 ```
 
 These include `stats_cloze.Rmd`, `stats_schoice.Rmd`, `stats_mchoice.Rmd`,
 `stats_num.Rmd`, and `stats_string.Rmd`.
 
-To export the full example set, source the bundled helper script:
+To export the full set, source the bundled helper script:
 
 ```r
 source(file.path(example_dir, "generate_examples.R"))
@@ -73,7 +73,7 @@ generate_example_exports(outdir)
 This writes one `_qpl.zip` per example and an additional combined
 `stats_examples_qpl.zip` to `outdir`.
 
-You can also export a single example directly:
+You can also export a single exercise directly:
 
 ```r
 library(exams2ilias)

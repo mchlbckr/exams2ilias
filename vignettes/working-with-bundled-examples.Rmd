@@ -16,17 +16,17 @@ knitr::opts_chunk$set(
 ```
 
 The package includes a small set of self-contained example exercises in
-`inst/examples`. These are useful for testing a fresh installation or for
+`inst/exercises`. These are useful for testing a fresh installation or for
 bootstrapping your own authoring workflow.
 
-## Locate the examples
+## Locate the exercises
 
 ```{r}
-example_dir <- system.file("examples", package = "exams2ilias")
+example_dir <- system.file("exercises", package = "exams2ilias")
 list.files(example_dir, full.names = TRUE)
 ```
 
-## Export one example
+## Export one exercise
 
 ```{r}
 library(exams2ilias)
@@ -44,9 +44,9 @@ exams2ilias(
 )
 ```
 
-## Export the full example set
+## Export the full set
 
-The helper script `generate_examples.R` exports each bundled example
+The helper script `generate_examples.R` exports each bundled exercise
 individually and can also create one combined question pool.
 
 ```{r}
@@ -58,11 +58,11 @@ dir.create(outdir)
 generate_example_exports(outdir)
 ```
 
-## Adapt an example for your own pool
+## Adapt an exercise for your own pool
 
 A practical workflow is:
 
-1. Start from the closest bundled example.
+1. Start from the closest bundled exercise.
 2. Replace the statistical scenario and answer logic.
 3. Keep the metadata structure intact.
 4. Export one question first and test the import in ILIAS.

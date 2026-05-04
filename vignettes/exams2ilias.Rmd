@@ -58,7 +58,7 @@ set `template` explicitly if you want to use your own XML template file.
 
 ```{r}
 exams2ilias(
-  system.file("examples", "stats_cloze.Rmd", package = "exams2ilias"),
+  system.file("exercises", "stats_cloze.Rmd", package = "exams2ilias"),
   n = 1,
   dir = outdir,
   name = "stats_cloze",
@@ -67,15 +67,15 @@ exams2ilias(
 )
 ```
 
-## Bundled examples
+## Bundled exercises
 
-The package ships with self-contained statistics examples for the main exercise
-types:
+The package ships with self-contained statistics exercises for the main
+question types:
 
 ```{r}
-example_dir <- system.file("examples", package = "exams2ilias")
+example_dir <- system.file("exercises", package = "exams2ilias")
 list.files(example_dir, pattern = "\\.[Rr]md$", full.names = TRUE)
 ```
 
-These examples are intended both as smoke-tested templates and as a starting
+These exercises are intended both as smoke-tested templates and as a starting
 point for your own question authoring workflow.

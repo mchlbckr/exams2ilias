@@ -7,7 +7,7 @@ fixture_path <- function(name) {
 }
 
 example_path <- function(name) {
-  system.file("examples", name, package = "exams2ilias")
+  system.file("exercises", name, package = "exams2ilias")
 }
 
 test_that("non-placeholder cloze export uses ILIAS top-level items", {

@@ -5,9 +5,9 @@ generate_example_exports <- function(output_dir = file.path(getwd(), "ilias_exam
     stop("The exams2ilias package must be installed to run this script.")
   }
 
-  example_dir <- system.file("examples", package = "exams2ilias")
+  example_dir <- system.file("exercises", package = "exams2ilias")
   if(!nzchar(example_dir)) {
-    stop("Could not locate the bundled example directory.")
+    stop("Could not locate the bundled exercises directory.")
   }
 
   example_files <- file.path(example_dir, c(
