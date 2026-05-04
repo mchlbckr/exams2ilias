@@ -1,0 +1,14 @@
+Question
+========
+Which abbreviation is commonly used for the standard error?
+
+Solution
+========
+SE
+
+Meta-information
+================
+extype: string
+exsolution: SE
+exname: Standard error abbreviation
+expoints: 1

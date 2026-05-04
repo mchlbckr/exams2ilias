@@ -61,8 +61,9 @@
   \item{xmlcollapse}{logical or character. Should line breaks be collapsed in the XML
     code. If \code{TRUE} everything is collapsed with spaces.}
   \item{metasolution}{logical. Should the solution be added to the XML
-    output as qtimetadata tag? This currently only works for essay-like
-    ILIAS questions.}
+    output as qtimetadata tag? This currently only works for essay/string-like
+    ILIAS questions and uses the PHP-serialized solution structure expected by
+    ILIAS internally.}
   \item{\dots}{further arguments passed on to \code{\link[exams]{exams2qti12}}.}
 }
 \value{

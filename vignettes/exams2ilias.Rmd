@@ -21,10 +21,10 @@ targets the import structure validated against ILIAS 9.17.
 
 ## Install
 
-Until the package is released on CRAN, install it from GitHub:
+Install the released version from CRAN:
 
 ```{r}
-remotes::install_github("mchlbckr/exams2ilias")
+install.packages("exams2ilias")
 ```
 
 ## Minimal export
@@ -39,7 +39,7 @@ outdir <- tempfile("ilias-")
 dir.create(outdir)
 
 exams2ilias(
-  system.file("exercises/lm.Rmd", package = "exams"),
+  "lm.Rmd",
   n = 1,
   dir = outdir,
   name = "lm_ilias"
@@ -47,6 +47,8 @@ exams2ilias(
 ```
 
 This creates a ZIP file that can be imported into an ILIAS question pool.
+Exercises bundled with `exams`, such as `"ttest.Rmd"` or `"boxplots.Rmd"`, can
+be addressed directly by file name.
 
 ## Internal template
 

@@ -14,12 +14,15 @@ test_that("non-placeholder cloze export uses ILIAS top-level items", {
   mydir <- tempfile("exams2ilias-")
   dir.create(mydir)
 
-  exams2ilias(
-    system.file("exercises/lm.Rmd", package = "exams"),
-    n = 1,
-    dir = mydir,
-    name = "lm_ilias",
-    xmlcollapse = FALSE
+  expect_warning(
+    exams2ilias(
+      system.file("exercises/lm.Rmd", package = "exams"),
+      n = 1,
+      dir = mydir,
+      name = "lm_ilias",
+      xmlcollapse = FALSE
+    ),
+    "plain text only"
   )
 
   lm_zip <- file.path(mydir, "lm_ilias_qpl.zip")
@@ -40,6 +43,9 @@ test_that("non-placeholder cloze export uses ILIAS top-level items", {
   expect_false(any(grepl("<itemfeedback", lm_qti, fixed = TRUE)))
   expect_true(any(grepl('minnumber="', lm_qti, fixed = TRUE)))
   expect_false(any(grepl('minnumber="([^"]+)" maxnumber="\\1"', lm_qti, perl = TRUE)))
+  expect_true(any(grepl("data:text/csv;base64", lm_qti, fixed = TRUE)))
+  expect_true(any(grepl("<![CDATA[x and y are not significantly correlated]]>", lm_qti, fixed = TRUE)))
+  expect_false(any(grepl("<![CDATA[<code>", lm_qti, fixed = TRUE)))
   expect_true(any(grepl('<Question QRef="il_0_qst_[0-9]+"', lm_qpl, perl = TRUE)))
   expect_true(any(grepl('<TriggerQuestion Id="[0-9]+"></TriggerQuestion>', lm_qpl, perl = TRUE)))
 })
@@ -97,7 +103,45 @@ test_that("placeholder cloze export keeps the simplified ILIAS structure", {
   expect_true(any(grepl('maxattempts="0"', vowels_qti, fixed = TRUE)))
   expect_true(any(grepl('<response_str ident="gap_5"', vowels_qti, fixed = TRUE)))
   expect_true(any(grepl('<mattext texttype="text/xhtml"> </mattext>', vowels_qti, fixed = TRUE)))
+  expect_true(any(grepl("1\\. \\[[^]]+\\] is the", vowels_qti, perl = TRUE)))
+  expect_true(any(grepl("2\\. \\[[^]]+\\] is the", vowels_qti, perl = TRUE)))
+  expect_false(any(grepl("&lt;ol|&lt;li|&lt;/li", vowels_qti, perl = TRUE)))
   expect_false(any(grepl("<itemfeedback", vowels_qti, fixed = TRUE)))
+})
+
+test_that("preformatted R output keeps line breaks for ILIAS", {
+  mydir <- tempfile("exams2ilias-")
+  dir.create(mydir)
+
+  exams2ilias(
+    system.file("exercises/ttest.Rmd", package = "exams"),
+    n = 1,
+    dir = mydir,
+    name = "ttest_ilias",
+    xmlcollapse = FALSE
+  )
+
+  qti <- read_zip_xml(file.path(mydir, "ttest_ilias_qpl.zip"), "ttest_ilias_qpl/ttest_ilias_qti.xml")
+
+  expect_true(any(grepl("<pre><code style=\"font-family: 'courier';\">", qti, fixed = TRUE)))
+  expect_true(any(grepl("Two Sample t-test<br/>", qti, fixed = TRUE)))
+})
+
+test_that("boxplots exercise keeps generated images embedded", {
+  mydir <- tempfile("exams2ilias-")
+  dir.create(mydir)
+
+  exams2ilias(
+    system.file("exercises/boxplots.Rmd", package = "exams"),
+    n = 1,
+    dir = mydir,
+    name = "boxplots_ilias",
+    xmlcollapse = FALSE
+  )
+
+  qti <- read_zip_xml(file.path(mydir, "boxplots_ilias_qpl.zip"), "boxplots_ilias_qpl/boxplots_ilias_qti.xml")
+
+  expect_true(any(grepl("data:image/png;base64", qti, fixed = TRUE)))
 })
 
 test_that("vault mixed-type cloze fixture exports without the upstream crash", {
@@ -177,6 +221,38 @@ test_that("multiple-choice export keeps partial-credit scoring without all-or-no
   expect_gte(sum(grepl('<setvar varname="SCORE" action="Add">1</setvar>', qti, fixed = TRUE)), 3L)
   expect_true(any(grepl('<setvar varname="SCORE" action="Add">-1\\.5</setvar>', qti, perl = TRUE)))
   expect_false(any(grepl('<setvar varname="SCORE" action="Set">3</setvar>', qti, fixed = TRUE)))
+})
+
+test_that("metasolution writes ILIAS term scoring metadata", {
+  mydir <- tempfile("exams2ilias-")
+  dir.create(mydir)
+
+  exams2ilias(
+    fixture_path("string_metasolution.Rmd"),
+    n = 1,
+    dir = mydir,
+    name = "string_metasolution",
+    xmlcollapse = FALSE,
+    metasolution = TRUE
+  )
+
+  qti_lines <- read_zip_xml(
+    file.path(mydir, "string_metasolution_qpl.zip"),
+    "string_metasolution_qpl/string_metasolution_qti.xml"
+  )
+  qti <- paste(qti_lines, collapse = "\n")
+
+  expect_true(grepl("<fieldlabel>termscoring</fieldlabel>", qti, fixed = TRUE))
+  expect_true(grepl("<fieldlabel>termrelation</fieldlabel><fieldentry>any</fieldentry>", qti, fixed = TRUE))
+
+  term_line <- qti_lines[grep("<fieldlabel>termscoring</fieldlabel>", qti_lines, fixed = TRUE)][1L]
+  encoded <- sub(".*<fieldentry>([^<]+)</fieldentry>.*", "\\1", term_line)
+  decoded_raw <- base64enc::base64decode(encoded)
+  decoded <- rawToChar(decoded_raw[decoded_raw != as.raw(0)])
+
+  expect_true(grepl("ASS_AnswerMultipleResponseImage", decoded, fixed = TRUE))
+  expect_true(grepl("answertext", decoded, fixed = TRUE))
+  expect_true(grepl("SE", decoded, fixed = TRUE))
 })
 
 test_that("bundled example exercises export individually", {

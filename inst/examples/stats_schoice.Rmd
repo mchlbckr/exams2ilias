@@ -9,23 +9,24 @@ A two-sided hypothesis test for a regression coefficient yields a p-value of
 
 Which statement is correct?
 
-```{r questionlist, echo = FALSE, results = "asis"}
-exams::answerlist(c(
-  "At the 5% significance level, the null hypothesis is rejected.",
-  "The p-value is the probability that the null hypothesis is true.",
-  "The p-value proves that the effect is practically important.",
-  "The p-value shows that the estimated coefficient must be positive."
-), markup = "markdown")
-```
+Answerlist
+----------
+* At the 5% significance level, the null hypothesis is rejected.
+* The p-value is the probability that the null hypothesis is true.
+* The p-value proves that the effect is practically important.
+* The p-value shows that the estimated coefficient must be positive.
 
 Solution
 ========
 Because the p-value is below 0.05, the null hypothesis is rejected at the 5%
 level. The other statements are common misinterpretations of p-values.
 
-```{r solutionlist, echo = FALSE, results = "asis"}
-exams::answerlist(c("True", "False", "False", "False"), markup = "markdown")
-```
+Answerlist
+----------
+* True
+* False
+* False
+* False
 
 Meta-information
 ================
