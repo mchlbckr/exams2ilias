@@ -104,14 +104,15 @@ exams2ilias <- function(file, n = 1L, nsamp = NULL, dir = ".",
     item_id <- paste0("il_0_qst_", prefix, sprintf(paste0("%0", width_id, "d"), k))
     rval[[i]][[j]]$metainfo$id <- item_id
     qrefs[k] <- item_id
+    item_description <- ilias_variant_description(x, k)
 
     if(identical(x$metainfo$type, "cloze")) {
       item_xml[[k]] <- make_item_ilias_cloze(items[[k]], rval[[i]][[j]], item_id, title,
-        final_maxattempts[k])
+        final_maxattempts[k], description = item_description)
     } else {
       item_xml[[k]] <- patch_item_ilias(items[[k]], item_id, title,
         ilias_question_type(x$metainfo$type), final_maxattempts[k],
-        description = ilias_metainfo_description(x))
+        description = item_description)
     }
   }
 

@@ -432,7 +432,8 @@ ilias_gap_xml <- function(type, gap_id, choices, solution, tolerance, points, ma
   list(presentation = presentation, resprocessing = resprocessing)
 }
 
-make_item_ilias_cloze <- function(item_xml, x, item_id, title, maxattempts = 0) {
+make_item_ilias_cloze <- function(item_xml, x, item_id, title, maxattempts = 0,
+  description = ilias_metainfo_description(x)) {
   solution <- if(!is.list(x$metainfo$solution)) list(x$metainfo$solution) else x$metainfo$solution
   n <- length(solution)
   type <- x$metainfo$clozetype
@@ -510,7 +511,7 @@ make_item_ilias_cloze <- function(item_xml, x, item_id, title, maxattempts = 0) 
       paste0('maxattempts="', if(is.infinite(maxattempts) || maxattempts == 0) 0 else maxattempts, '"')),
     ilias_item_metadata("CLOZE QUESTION",
       include_author = FALSE, include_fixed_text_length = FALSE,
-      description = ilias_metainfo_description(x)),
+      description = description),
     presentation,
     resprocessing,
     '</item>'
@@ -552,6 +553,14 @@ ilias_pool_description <- function(exm) {
   if(length(descriptions) < 1L) return("")
 
   paste(descriptions, collapse = "\n")
+}
+
+ilias_variant_description <- function(x, variant) {
+  description <- ilias_metainfo_description(x)
+  variant_text <- paste0("v", variant)
+  if(.empty_text(description)) return(variant_text)
+
+  paste(description, variant_text, sep = "; ")
 }
 
 make_qpl_xml <- function(name, qrefs, pool_id = paste0(name, "_qpl"), description = "") {

@@ -106,8 +106,36 @@ test_that("question pool description can be read from extags", {
     fixed = TRUE
   ))
   expect_true(grepl(
-    "<qticomment>Internal ILIAS description from extags.</qticomment>",
+    "<qticomment>Internal ILIAS description from extags.; v1</qticomment>",
     description_qti,
+    fixed = TRUE
+  ))
+})
+
+test_that("item descriptions include rendered variant numbers", {
+  mydir <- tempfile("exams2ilias-")
+  dir.create(mydir)
+
+  exams2ilias(
+    fixture_path("description_tags.Rmd"),
+    n = 2,
+    dir = mydir,
+    name = "description_variants",
+    xmlcollapse = FALSE
+  )
+
+  variants_zip <- file.path(mydir, "description_variants_qpl.zip")
+  variants_qti <- paste(read_zip_xml(variants_zip,
+    "description_variants_qpl/description_variants_qti.xml"), collapse = "\n")
+
+  expect_true(grepl(
+    "<qticomment>Internal ILIAS description from extags.; v1</qticomment>",
+    variants_qti,
+    fixed = TRUE
+  ))
+  expect_true(grepl(
+    "<qticomment>Internal ILIAS description from extags.; v2</qticomment>",
+    variants_qti,
     fixed = TRUE
   ))
 })
