@@ -1,0 +1,24 @@
+```{r setup, echo = FALSE, results = "hide"}
+choices <- c("mean", "median", "standard deviation")
+```
+
+Question
+========
+Which statistic is a measure of location?
+`r exams::add_cloze(choices[1], choices, type = "schoice")`
+
+`r exams::format_metainfo("answerlist")`
+
+Solution
+========
+The mean is a measure of location.
+
+Meta-information
+================
+extype: cloze
+exname: Cloze Shuffle Choice
+exclozetype: `r exams::format_metainfo("type")`
+exsolution: `r exams::format_metainfo("solution")`
+extol: `r exams::format_metainfo("tolerance")`
+expoints: 1
+exshuffle: TRUE

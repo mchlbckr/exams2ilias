@@ -1,0 +1,34 @@
+```{r setup, echo = FALSE, results = "hide"}
+x <- 2
+y <- 3
+```
+
+Question
+========
+Use the following values.
+
+```{r values, echo = TRUE}
+x <- 2
+y <- 3
+```
+
+a) Compute x + y:
+`r exams::add_cloze(x + y)`
+
+b) Compute x * y:
+`r exams::add_cloze(x * y)`
+
+`r exams::format_metainfo("answerlist")`
+
+Solution
+========
+The values are computed directly.
+
+Meta-information
+================
+extype: cloze
+exname: Cloze Intro Split
+exclozetype: `r exams::format_metainfo("type")`
+exsolution: `r exams::format_metainfo("solution")`
+extol: `r exams::format_metainfo("tolerance")`
+expoints: 1|1

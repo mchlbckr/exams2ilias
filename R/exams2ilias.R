@@ -90,6 +90,7 @@ exams2ilias <- function(file, n = 1L, nsamp = NULL, dir = ".",
   qrefs <- character(length(items))
   pool_id <- paste0("il_0_qpl_", prefix)
   final_maxattempts <- rep(maxattempts, length.out = length(items))
+  pool_description <- ilias_pool_description(exm)
 
   for(k in seq_along(items)) {
     pos <- lookup[[names(items)[k]]]
@@ -109,7 +110,8 @@ exams2ilias <- function(file, n = 1L, nsamp = NULL, dir = ".",
         final_maxattempts[k])
     } else {
       item_xml[[k]] <- patch_item_ilias(items[[k]], item_id, title,
-        ilias_question_type(x$metainfo$type), final_maxattempts[k])
+        ilias_question_type(x$metainfo$type), final_maxattempts[k],
+        description = ilias_metainfo_description(x))
     }
   }
 
@@ -127,7 +129,8 @@ exams2ilias <- function(file, n = 1L, nsamp = NULL, dir = ".",
     pkgdir <- file.path(workdir, name)
     dir.create(pkgdir)
     writeLines(qti_xml, file.path(pkgdir, paste0(name, "_qti.xml")))
-    writeLines(make_qpl_xml(name, qrefs, pool_id), file.path(pkgdir, paste0(name, "_qpl.xml")))
+    writeLines(make_qpl_xml(name, qrefs, pool_id, description = pool_description),
+      file.path(pkgdir, paste0(name, "_qpl.xml")))
 
     if(metasolution) solution_to_qtimetadata(name, rval, path = workdir)
 

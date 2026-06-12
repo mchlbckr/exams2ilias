@@ -167,10 +167,10 @@ ilias_item_header <- function(id, title, maxattempts = NULL) {
 
 ilias_item_metadata <- function(questiontype, ilias_version = "9.17.0",
   author = "R/exams", textgaprating = "ci", include_author = TRUE,
-  include_fixed_text_length = TRUE)
+  include_fixed_text_length = TRUE, description = "")
 {
   xml <- c(
-    '<qticomment></qticomment>',
+    paste0('<qticomment>', ilias_escape_text(description), '</qticomment>'),
     '<itemmetadata>',
     '<qtimetadata>',
     '<qtimetadatafield>',
@@ -216,7 +216,8 @@ ilias_bare_qid <- function(qref) {
   sub("^.*_qst_([0-9]+)$", "\\1", qref)
 }
 
-patch_item_ilias <- function(item_xml, item_id, title, questiontype, maxattempts = 0) {
+patch_item_ilias <- function(item_xml, item_id, title, questiontype, maxattempts = 0,
+  description = "") {
   meta_start <- grep("^\\s*<itemmetadata>\\s*$", item_xml)
   meta_end <- grep("^\\s*</itemmetadata>\\s*$", item_xml)
   if(length(meta_start) != 1L || length(meta_end) != 1L || meta_end < meta_start) {
@@ -226,7 +227,7 @@ patch_item_ilias <- function(item_xml, item_id, title, questiontype, maxattempts
   rval <- item_xml[-(meta_start:meta_end)]
   rval[1L] <- ilias_item_header(item_id, title,
     paste0('maxattempts="', if(is.infinite(maxattempts) || maxattempts == 0) 0 else maxattempts, '"'))
-  rval <- append(rval, ilias_item_metadata(questiontype), after = 1L)
+  rval <- append(rval, ilias_item_metadata(questiontype, description = description), after = 1L)
 
   p <- grep("^\\s*<presentation>\\s*$", rval)
   if(length(p) > 0L) {
@@ -292,7 +293,40 @@ ilias_material <- function(text, keep_whitespace = FALSE) {
   )
 }
 
+ilias_first_cloze_material <- function(text) {
+  if(is.null(text) || anyNA(text)) return(NULL)
+  text <- paste(text, collapse = "\n")
+  if(.empty_text(text)) return(NULL)
+
+  item_start <- regexpr("\n[[:space:]]*(1\\.[[:space:]]+|<p>[[:alpha:]]\\))", text, perl = TRUE)
+  if(!identical(as.integer(item_start), -1L)) {
+    preamble <- substr(text, 1L, as.integer(item_start))
+    cloze_start <- substr(text, as.integer(item_start) + 1L, nchar(text))
+
+    return(c(
+      ilias_material(preamble, keep_whitespace = TRUE),
+      ilias_material(cloze_start, keep_whitespace = TRUE)
+    ))
+  }
+
+  matches <- gregexpr("\n[[:space:]]*\n", text, perl = TRUE)[[1L]]
+  if(identical(matches, -1L)) return(ilias_material(text, keep_whitespace = TRUE))
+
+  starts <- as.integer(matches)
+  lengths <- attr(matches, "match.length")
+  i <- length(starts)
+
+  preamble <- substr(text, 1L, starts[i] + lengths[i] - 1L)
+  cloze_start <- substr(text, starts[i] + lengths[i], nchar(text))
+
+  c(
+    ilias_material(preamble, keep_whitespace = TRUE),
+    ilias_material(cloze_start, keep_whitespace = TRUE)
+  )
+}
+
 ilias_gap_xml <- function(type, gap_id, choices, solution, tolerance, points, maxchars,
+  shuffle = FALSE,
   warn_env = NULL) {
   if(type %in% c("essay", "file", "verbatim")) {
     warning("ILIAS cloze export treats cloze type '", type, "' as a string gap")
@@ -370,7 +404,7 @@ ilias_gap_xml <- function(type, gap_id, choices, solution, tolerance, points, ma
   presentation <- c(
     paste0('<response_str ident="', gap_id, '" rcardinality="',
       if(type == "mchoice") "Multiple" else "Single", '">'),
-    '<render_choice shuffle="No">'
+    paste0('<render_choice shuffle="', if(isTRUE(shuffle)) "Yes" else "No", '">')
   )
   for(j in seq_along(choices)) {
     presentation <- c(presentation,
@@ -410,6 +444,7 @@ make_item_ilias_cloze <- function(item_xml, x, item_id, title, maxattempts = 0) 
 
   points <- if(is.null(x$metainfo$points)) rep(1, n) else x$metainfo$points
   q_points <- rep(points, length.out = n)
+  shuffle <- rep(isTRUE(x$metainfo$shuffle), length.out = n)
   warn_env <- new.env(parent = emptyenv())
   warn_env$choice_markup <- FALSE
 
@@ -441,9 +476,14 @@ make_item_ilias_cloze <- function(item_xml, x, item_id, title, maxattempts = 0) 
     for(k in seq_along(gaps)) {
       i <- gaps[k]
       if(i < 1L || i > n) stop("invalid ##ANSWER tag in cloze question")
-      presentation <- c(presentation, ilias_material(parts[k], keep_whitespace = TRUE))
+      presentation <- c(presentation, if(k == 1L) {
+        ilias_first_cloze_material(parts[k])
+      } else {
+        ilias_material(parts[k], keep_whitespace = TRUE)
+      })
       gap_xml <- ilias_gap_xml(type[i], paste0("gap_", i - 1L), questionlist[[i]],
-        solution[[i]], tol[[i]], q_points[i], maxchars[[i]], warn_env = warn_env)
+        solution[[i]], tol[[i]], q_points[i], maxchars[[i]], shuffle = shuffle[i],
+        warn_env = warn_env)
       presentation <- c(presentation, gap_xml$presentation)
       resprocessing <- c(resprocessing, gap_xml$resprocessing)
     }
@@ -455,7 +495,8 @@ make_item_ilias_cloze <- function(item_xml, x, item_id, title, maxattempts = 0) 
         presentation <- c(presentation, ilias_material(questionlist[[i]]))
       }
       gap_xml <- ilias_gap_xml(type[i], paste0("gap_", i - 1L), questionlist[[i]],
-        solution[[i]], tol[[i]], q_points[i], maxchars[[i]], warn_env = warn_env)
+        solution[[i]], tol[[i]], q_points[i], maxchars[[i]], shuffle = shuffle[i],
+        warn_env = warn_env)
       presentation <- c(presentation, gap_xml$presentation)
       resprocessing <- c(resprocessing, gap_xml$resprocessing)
     }
@@ -468,7 +509,8 @@ make_item_ilias_cloze <- function(item_xml, x, item_id, title, maxattempts = 0) 
     ilias_item_header(item_id, title,
       paste0('maxattempts="', if(is.infinite(maxattempts) || maxattempts == 0) 0 else maxattempts, '"')),
     ilias_item_metadata("CLOZE QUESTION",
-      include_author = FALSE, include_fixed_text_length = FALSE),
+      include_author = FALSE, include_fixed_text_length = FALSE,
+      description = ilias_metainfo_description(x)),
     presentation,
     resprocessing,
     '</item>'
@@ -481,7 +523,44 @@ ilias_collapse_xml <- function(xml, xmlcollapse) {
   paste(xml, collapse = collapse)
 }
 
-make_qpl_xml <- function(name, qrefs, pool_id = paste0(name, "_qpl")) {
+ilias_metainfo_description <- function(x) {
+  meta <- x$metainfo
+
+  description <- meta$description
+  if(!is.null(description) && length(description) > 0L) {
+    description <- paste(description, collapse = " ")
+    if(!.empty_text(description)) return(description)
+  }
+
+  tags <- meta$tags
+  if(is.null(tags) || length(tags) < 1L) return("")
+
+  tags <- as.character(tags)
+  matched <- grepl("^\\s*description\\s*:", tags, ignore.case = TRUE)
+  if(!any(matched)) return("")
+
+  description <- sub("^\\s*description\\s*:\\s*", "", tags[matched], ignore.case = TRUE)
+  description <- description[!vapply(description, .empty_text, logical(1))]
+  if(length(description) < 1L) return("")
+
+  paste(description, collapse = " ")
+}
+
+ilias_pool_description <- function(exm) {
+  descriptions <- vapply(exm, function(z) ilias_metainfo_description(z$item), character(1))
+  descriptions <- unique(descriptions[!vapply(descriptions, .empty_text, logical(1))])
+  if(length(descriptions) < 1L) return("")
+
+  paste(descriptions, collapse = "\n")
+}
+
+make_qpl_xml <- function(name, qrefs, pool_id = paste0(name, "_qpl"), description = "") {
+  description_xml <- if(.empty_text(description)) {
+    '<Description Language="en"/>'
+  } else {
+    paste0('<Description Language="en">', ilias_escape_text(description), '</Description>')
+  }
+
   xml <- c(
     '<?xml version="1.0" encoding="utf-8"?>',
     ## Keep the historic ILIAS export DOCTYPE: the public DTD URL currently
@@ -494,7 +573,7 @@ make_qpl_xml <- function(name, qrefs, pool_id = paste0(name, "_qpl")) {
     paste0('<Identifier Catalog="ILIAS" Entry="', pool_id, '"/>'),
     paste0('<Title Language="en">', name, '</Title>'),
     '<Language Language="en"/>',
-    '<Description Language="en"/>',
+    description_xml,
     '<Keyword Language="en"/>',
     '</General>',
     '</MetaData>',
@@ -565,7 +644,7 @@ solustr_to_phpstruct <- function(solustr, nitems, encode = TRUE) {
           's:5:"image";s:0:"";s:16:"points_unchecked";s:1:"0";'
         )),
         charToRaw('s:13:"'), as.raw(0x00), charToRaw('*'), as.raw(0x00),
-        charToRaw(paste0('answertext";s:', nchar(solustr[i]), ':"',
+        charToRaw(paste0('answertext";s:', length(charToRaw(solustr[i])), ':"',
           solustr[i], '";')),
         charToRaw('s:9:"'), as.raw(0x00), charToRaw('*'), as.raw(0x00),
         charToRaw('points";s:1:"1";'),

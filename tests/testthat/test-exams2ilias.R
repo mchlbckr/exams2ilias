@@ -82,6 +82,80 @@ test_that("metadata fields are emitted as siblings in single-choice items", {
   ))
 })
 
+test_that("question pool description can be read from extags", {
+  mydir <- tempfile("exams2ilias-")
+  dir.create(mydir)
+
+  exams2ilias(
+    fixture_path("description_tags.Rmd"),
+    n = 1,
+    dir = mydir,
+    name = "description_tags",
+    xmlcollapse = FALSE
+  )
+
+  description_zip <- file.path(mydir, "description_tags_qpl.zip")
+  description_qpl <- paste(read_zip_xml(description_zip,
+    "description_tags_qpl/description_tags_qpl.xml"), collapse = "\n")
+  description_qti <- paste(read_zip_xml(description_zip,
+    "description_tags_qpl/description_tags_qti.xml"), collapse = "\n")
+
+  expect_true(grepl(
+    "<Description Language=\"en\">Internal ILIAS description from extags.</Description>",
+    description_qpl,
+    fixed = TRUE
+  ))
+  expect_true(grepl(
+    "<qticomment>Internal ILIAS description from extags.</qticomment>",
+    description_qti,
+    fixed = TRUE
+  ))
+})
+
+test_that("cloze intro and first prompt are emitted as separate material blocks", {
+  mydir <- tempfile("exams2ilias-")
+  dir.create(mydir)
+
+  exams2ilias(
+    fixture_path("cloze_intro_split.Rmd"),
+    n = 1,
+    dir = mydir,
+    name = "cloze_intro_split",
+    xmlcollapse = FALSE
+  )
+
+  cloze_zip <- file.path(mydir, "cloze_intro_split_qpl.zip")
+  cloze_qti <- read_zip_xml(cloze_zip, "cloze_intro_split_qpl/cloze_intro_split_qti.xml")
+  preamble_line <- grep("Use the following values", cloze_qti)
+  first_prompt_line <- grep("1\\. .*Compute x \\+ y", cloze_qti)
+  first_gap_line <- grep('<response_num ident="gap_0"', cloze_qti)
+
+  expect_length(preamble_line, 1L)
+  expect_length(first_prompt_line, 1L)
+  expect_length(first_gap_line, 1L)
+  expect_lt(preamble_line, first_prompt_line)
+  expect_lt(first_prompt_line, first_gap_line)
+})
+
+test_that("choice-based cloze gaps respect exshuffle", {
+  mydir <- tempfile("exams2ilias-")
+  dir.create(mydir)
+
+  exams2ilias(
+    fixture_path("cloze_shuffle_choice.Rmd"),
+    n = 1,
+    dir = mydir,
+    name = "cloze_shuffle_choice",
+    xmlcollapse = FALSE
+  )
+
+  shuffle_zip <- file.path(mydir, "cloze_shuffle_choice_qpl.zip")
+  shuffle_qti <- paste(read_zip_xml(shuffle_zip,
+    "cloze_shuffle_choice_qpl/cloze_shuffle_choice_qti.xml"), collapse = "\n")
+
+  expect_true(grepl('<render_choice shuffle="Yes">', shuffle_qti, fixed = TRUE))
+})
+
 test_that("placeholder cloze export keeps the simplified ILIAS structure", {
   mydir <- tempfile("exams2ilias-")
   dir.create(mydir)
@@ -253,6 +327,14 @@ test_that("metasolution writes ILIAS term scoring metadata", {
   expect_true(grepl("ASS_AnswerMultipleResponseImage", decoded, fixed = TRUE))
   expect_true(grepl("answertext", decoded, fixed = TRUE))
   expect_true(grepl("SE", decoded, fixed = TRUE))
+})
+
+test_that("metasolution PHP string lengths use UTF-8 byte counts", {
+  decoded_raw <- solustr_to_phpstruct("Größe", nitems = 1L, encode = FALSE)
+  decoded <- rawToChar(decoded_raw[decoded_raw != as.raw(0)])
+
+  expect_true(grepl('answertext";s:7:"Größe";', decoded, fixed = TRUE))
+  expect_false(grepl('answertext";s:5:"Größe";', decoded, fixed = TRUE))
 })
 
 test_that("bundled example exercises export individually", {
