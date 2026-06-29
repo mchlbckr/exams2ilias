@@ -345,6 +345,49 @@ test_that("boxplots exercise keeps generated images embedded", {
   expect_true(any(grepl("data:image/png;base64", qti, fixed = TRUE)))
 })
 
+test_that("plot cloze with spaced chunk label embeds supplements as data URIs", {
+  mydir <- tempfile("exams2ilias-")
+  dir.create(mydir)
+
+  exams2ilias(
+    fixture_path("plot_space_cloze.Rmd"),
+    n = 1,
+    dir = mydir,
+    name = "plot_space_cloze",
+    xmlcollapse = FALSE
+  )
+
+  zipfile <- file.path(mydir, "plot_space_cloze_qpl.zip")
+  qti <- paste(read_zip_xml(zipfile,
+    "plot_space_cloze_qpl/plot_space_cloze_qti.xml"), collapse = "\n")
+  members <- utils::unzip(zipfile, list = TRUE)$Name
+
+  expect_true(grepl("data:image/png;base64", qti, fixed = TRUE))
+  expect_false(grepl('src="[^"]+\\.png"', qti, perl = TRUE))
+  expect_false(any(grepl("\\.png$", members)))
+})
+
+test_that("plot cloze image embedding avoids multi-variant filename collisions", {
+  mydir <- tempfile("exams2ilias-")
+  dir.create(mydir)
+
+  exams2ilias(
+    fixture_path("plot_space_cloze.Rmd"),
+    n = 2,
+    dir = mydir,
+    name = "plot_space_cloze_multi",
+    xmlcollapse = FALSE
+  )
+
+  zipfile <- file.path(mydir, "plot_space_cloze_multi_qpl.zip")
+  qti <- paste(read_zip_xml(zipfile,
+    "plot_space_cloze_multi_qpl/plot_space_cloze_multi_qti.xml"), collapse = "\n")
+
+  data_uri_count <- gregexpr("data:image/png;base64", qti, fixed = TRUE)[[1L]]
+  expect_gte(sum(data_uri_count > 0L), 2L)
+  expect_false(grepl('src="[^"]+\\.png"', qti, perl = TRUE))
+})
+
 test_that("vault mixed-type cloze fixture exports without the upstream crash", {
   mydir <- tempfile("exams2ilias-")
   dir.create(mydir)

@@ -118,6 +118,7 @@ exams2ilias <- function(file, n = 1L, nsamp = NULL, dir = ".",
         ilias_question_type(x$metainfo$type), final_maxattempts[k],
         description = item_description)
     }
+    item_xml[[k]] <- ilias_embed_item_images(item_xml[[k]], rval[[i]][[j]])
   }
 
   qti_xml <- c(

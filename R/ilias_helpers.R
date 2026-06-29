@@ -235,6 +235,75 @@ ilias_render_table_pre <- function(rows) {
   paste0("<pre>", ilias_escape_text(paste(lines, collapse = "\n")), "</pre>")
 }
 
+ilias_embed_item_images <- function(xml, item) {
+  supplements <- item$supplements
+  if(is.null(supplements) || length(supplements) < 1L) return(xml)
+  if(!any(grepl("src=", xml, fixed = TRUE))) return(xml)
+
+  vapply(xml, ilias_embed_images_line, character(1), supplements = supplements,
+    USE.NAMES = FALSE)
+}
+
+ilias_embed_images_line <- function(line, supplements) {
+  pattern <- "(?i)src=([\"'])([^\"']+\\.(png|jpe?g|gif|svg))\\1"
+  matches <- gregexpr(pattern, line, perl = TRUE)
+  refs <- regmatches(line, matches)[[1L]]
+  if(length(refs) < 1L || identical(refs, "-1")) return(line)
+
+  replacements <- vapply(refs, function(ref) {
+    quote <- sub("^src=([\"']).*$", "\\1", ref, perl = TRUE)
+    src <- sub("^src=[\"']([^\"']+)[\"']$", "\\1", ref, perl = TRUE)
+    data_uri <- ilias_supplement_data_uri(src, supplements)
+    if(is.null(data_uri)) return(ref)
+    paste0("src=", quote, data_uri, quote)
+  }, character(1))
+
+  regmatches(line, matches) <- list(replacements)
+  line
+}
+
+ilias_supplement_data_uri <- function(src, supplements) {
+  if(grepl("^[[:alpha:]][[:alnum:]+.-]*:", src)) return(NULL)
+  path <- ilias_match_supplement(src, supplements)
+  if(is.null(path) || !file.exists(path)) return(NULL)
+
+  mime <- ilias_image_mime(path)
+  if(is.null(mime)) return(NULL)
+  base64enc::dataURI(file = path, mime = mime)
+}
+
+ilias_match_supplement <- function(src, supplements) {
+  src_decoded <- utils::URLdecode(src)
+  candidates <- unique(c(src, src_decoded, basename(src), basename(src_decoded)))
+
+  supplement_names <- names(supplements)
+  for(candidate in candidates) {
+    if(!is.null(supplement_names) && candidate %in% supplement_names) {
+      return(unname(supplements[[candidate]]))
+    }
+  }
+
+  supplement_basenames <- basename(unname(supplements))
+  for(candidate in candidates) {
+    matched <- which(supplement_basenames == candidate)
+    if(length(matched) > 0L) return(unname(supplements[[matched[1L]]]))
+  }
+
+  NULL
+}
+
+ilias_image_mime <- function(path) {
+  ext <- tolower(tools::file_ext(path))
+  switch(ext,
+    "png" = "image/png",
+    "jpg" = "image/jpeg",
+    "jpeg" = "image/jpeg",
+    "gif" = "image/gif",
+    "svg" = "image/svg+xml",
+    NULL
+  )
+}
+
 ilias_warn_choice_markup <- function(original, plain, warn_env = NULL) {
   has_markup <- any(!is.na(original) & grepl("<[^>]+>", original, perl = TRUE))
   changed <- any(!is.na(original) & !is.na(plain) & original != plain)
