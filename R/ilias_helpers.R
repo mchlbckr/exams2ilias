@@ -104,6 +104,137 @@ ilias_plain_text <- function(x) {
   trimws(ilias_decode_entities(x))
 }
 
+ilias_table_strategy <- function(table_strategy) {
+  match.arg(table_strategy, c("html_basic", "pre", "plain", "html_styled", "keep"))
+}
+
+ilias_normalize_tables <- function(text, table_strategy = "html_basic") {
+  table_strategy <- ilias_table_strategy(table_strategy)
+  if(is.null(text) || anyNA(text) || identical(table_strategy, "keep")) return(text)
+
+  text <- paste(text, collapse = "\n")
+  if(!grepl("(?i)<table([[:space:]>])", text, perl = TRUE)) return(text)
+
+  pattern <- "(?is)<table([[:space:]][^>]*)?>.*?</table>"
+  matches <- gregexpr(pattern, text, perl = TRUE)
+  table_html <- regmatches(text, matches)
+  regmatches(text, matches) <- lapply(table_html, function(tables) {
+    vapply(tables, ilias_render_table, character(1), table_strategy = table_strategy)
+  })
+  text
+}
+
+ilias_render_table <- function(table_html, table_strategy) {
+  table_strategy <- ilias_table_strategy(table_strategy)
+  if(identical(table_strategy, "keep")) return(table_html)
+
+  table <- ilias_parse_table(table_html)
+  if(is.null(table)) return(if(identical(table_strategy, "plain")) ilias_plain_text(table_html) else table_html)
+
+  rows <- ilias_table_rows(table)
+  if(!length(rows)) return("")
+
+  if(identical(table_strategy, "html_basic") && ilias_table_is_complex(table, rows)) {
+    return(ilias_render_table_pre(rows))
+  }
+
+  switch(table_strategy,
+    "html_basic" = ilias_render_table_basic(rows),
+    "html_styled" = ilias_render_table_styled(rows),
+    "pre" = ilias_render_table_pre(rows),
+    "plain" = ilias_render_table_plain(rows),
+    stop("unsupported table strategy: ", table_strategy)
+  )
+}
+
+ilias_parse_table <- function(table_html) {
+  doc <- tryCatch(
+    xml2::read_html(table_html, options = c("RECOVER", "NOERROR", "NOWARNING")),
+    error = function(e) NULL
+  )
+  if(is.null(doc)) return(NULL)
+  table <- xml2::xml_find_first(doc, ".//table")
+  if(inherits(table, "xml_missing")) NULL else table
+}
+
+ilias_table_rows <- function(table) {
+  tr <- xml2::xml_find_all(table, ".//tr")
+  rows <- lapply(tr, function(row) {
+    cells <- xml2::xml_find_all(row, "./th|./td")
+    if(!length(cells)) return(NULL)
+    lapply(cells, function(cell) {
+      tag <- xml2::xml_name(cell)
+      txt <- trimws(xml2::xml_text(cell))
+      list(tag = tag, text = txt)
+    })
+  })
+  rows[lengths(rows) > 0L]
+}
+
+ilias_table_is_complex <- function(table, rows) {
+  has_complex_tags <- length(xml2::xml_find_all(table, ".//colgroup|.//col")) > 0L
+  has_nested_tables <- length(xml2::xml_find_all(table, ".//td//table|.//th//table")) > 0L
+  cells <- xml2::xml_find_all(table, ".//th|.//td")
+  has_spans <- any(nzchar(xml2::xml_attr(cells, "rowspan", default = ""))) ||
+    any(nzchar(xml2::xml_attr(cells, "colspan", default = "")))
+  too_wide <- max(vapply(rows, length, integer(1)), 0L) > 5L
+  has_complex_tags || has_nested_tables || has_spans || too_wide
+}
+
+ilias_render_table_basic <- function(rows) {
+  row_html <- vapply(rows, function(row) {
+    cell_html <- vapply(row, function(cell) {
+      tag <- if(identical(cell$tag, "th")) "th" else "td"
+      txt <- if(nzchar(cell$text)) ilias_escape_text(cell$text) else "&nbsp;"
+      paste0("<", tag, ">", txt, "</", tag, ">")
+    }, character(1))
+    paste0("<tr>", paste(cell_html, collapse = ""), "</tr>")
+  }, character(1))
+  paste0("<table>", paste(row_html, collapse = ""), "</table>")
+}
+
+ilias_render_table_styled <- function(rows) {
+  row_html <- vapply(rows, function(row) {
+    cell_html <- vapply(row, function(cell) {
+      tag <- if(identical(cell$tag, "th")) "th" else "td"
+      txt <- if(nzchar(cell$text)) ilias_escape_text(cell$text) else "&nbsp;"
+      paste0("<", tag, ">", txt, "</", tag, ">")
+    }, character(1))
+    paste0("<tr>", paste(cell_html, collapse = ""), "</tr>")
+  }, character(1))
+  paste0('<table border="1" cellpadding="4" cellspacing="0">',
+    paste(row_html, collapse = ""), "</table>")
+}
+
+ilias_render_table_plain <- function(rows) {
+  paste(vapply(rows, function(row) {
+    paste(vapply(row, function(cell) cell$text, character(1)), collapse = " | ")
+  }, character(1)), collapse = "\n")
+}
+
+ilias_render_table_pre <- function(rows) {
+  values <- lapply(rows, function(row) vapply(row, function(cell) cell$text, character(1)))
+  ncol <- max(vapply(values, length, integer(1)), 0L)
+  if(ncol < 1L) return("<pre></pre>")
+
+  values <- lapply(values, function(row) {
+    length(row) <- ncol
+    row[is.na(row)] <- ""
+    row
+  })
+  widths <- vapply(seq_len(ncol), function(j) {
+    max(vapply(values, function(row) nchar(row[j], type = "width"), integer(1)), 1L)
+  }, integer(1))
+
+  lines <- vapply(values, function(row) {
+    padded <- vapply(seq_len(ncol), function(j) {
+      sprintf(paste0("%-", widths[j], "s"), row[j])
+    }, character(1))
+    paste(padded, collapse = " | ")
+  }, character(1))
+  paste0("<pre>", ilias_escape_text(paste(lines, collapse = "\n")), "</pre>")
+}
+
 ilias_warn_choice_markup <- function(original, plain, warn_env = NULL) {
   has_markup <- any(!is.na(original) & grepl("<[^>]+>", original, perl = TRUE))
   changed <- any(!is.na(original) & !is.na(plain) & original != plain)
@@ -433,7 +564,8 @@ ilias_gap_xml <- function(type, gap_id, choices, solution, tolerance, points, ma
 }
 
 make_item_ilias_cloze <- function(item_xml, x, item_id, title, maxattempts = 0,
-  description = ilias_metainfo_description(x)) {
+  description = ilias_metainfo_description(x), table_strategy = "html_basic") {
+  table_strategy <- ilias_table_strategy(table_strategy)
   solution <- if(!is.list(x$metainfo$solution)) list(x$metainfo$solution) else x$metainfo$solution
   n <- length(solution)
   type <- x$metainfo$clozetype
@@ -462,6 +594,7 @@ make_item_ilias_cloze <- function(item_xml, x, item_id, title, maxattempts = 0,
 
   question <- if(!is.null(x$question)) paste(x$question, collapse = "\n") else NULL
   question <- ilias_flatten_ordered_lists(question)
+  question <- ilias_normalize_tables(question, table_strategy)
   has_answertags <- !is.null(question) && grepl("##ANSWER[0-9]+##", question)
 
   if(has_answertags) {
@@ -493,7 +626,8 @@ make_item_ilias_cloze <- function(item_xml, x, item_id, title, maxattempts = 0,
     presentation <- c(presentation, ilias_material(question))
     for(i in seq_len(n)) {
       if(type[i] %in% c("string", "num", "essay", "file", "verbatim")) {
-        presentation <- c(presentation, ilias_material(questionlist[[i]]))
+        presentation <- c(presentation,
+          ilias_material(ilias_normalize_tables(questionlist[[i]], table_strategy)))
       }
       gap_xml <- ilias_gap_xml(type[i], paste0("gap_", i - 1L), questionlist[[i]],
         solution[[i]], tol[[i]], q_points[i], maxchars[[i]], shuffle = shuffle[i],

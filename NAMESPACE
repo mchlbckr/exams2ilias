@@ -6,5 +6,7 @@ importFrom("utils",
   "zip")
 importFrom("base64enc",
   "base64encode")
+importFrom("xml2",
+  "read_html", "xml_attr", "xml_find_all", "xml_find_first", "xml_name", "xml_text")
 
 export("exams2ilias")

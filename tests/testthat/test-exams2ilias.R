@@ -229,6 +229,105 @@ test_that("preformatted R output keeps line breaks for ILIAS", {
   expect_true(any(grepl("Two Sample t-test<br/>", qti, fixed = TRUE)))
 })
 
+test_that("default table strategy emits conservative table markup", {
+  mydir <- tempfile("exams2ilias-")
+  dir.create(mydir)
+
+  exams2ilias(
+    fixture_path("table_cloze.Rmd"),
+    n = 1,
+    dir = mydir,
+    name = "table_cloze",
+    xmlcollapse = FALSE
+  )
+
+  qti <- paste(read_zip_xml(file.path(mydir, "table_cloze_qpl.zip"),
+    "table_cloze_qpl/table_cloze_qti.xml"), collapse = "\n")
+
+  expect_true(grepl("&lt;table&gt;", qti, fixed = TRUE))
+  expect_true(grepl("&lt;tr&gt;&lt;th&gt;Group&lt;/th&gt;", qti, fixed = TRUE))
+  expect_true(grepl("&lt;td&gt;&amp;nbsp;&lt;/td&gt;", qti, fixed = TRUE))
+  expect_false(grepl("class=&quot;dataframe&quot;|class=\"dataframe\"", qti))
+  expect_false(grepl("style=|align=|&lt;thead|&lt;tbody", qti))
+})
+
+test_that("table strategy keep preserves source table markup", {
+  mydir <- tempfile("exams2ilias-")
+  dir.create(mydir)
+
+  exams2ilias(
+    fixture_path("table_cloze.Rmd"),
+    n = 1,
+    dir = mydir,
+    name = "table_keep",
+    xmlcollapse = FALSE,
+    table_strategy = "keep"
+  )
+
+  qti <- paste(read_zip_xml(file.path(mydir, "table_keep_qpl.zip"),
+    "table_keep_qpl/table_keep_qti.xml"), collapse = "\n")
+
+  expect_true(grepl("class=\"dataframe\"", qti, fixed = TRUE))
+  expect_true(grepl("style=\"border-collapse: collapse;\"", qti, fixed = TRUE))
+  expect_true(grepl("&lt;thead&gt;", qti, fixed = TRUE))
+})
+
+test_that("table strategy pre emits monospace table text", {
+  mydir <- tempfile("exams2ilias-")
+  dir.create(mydir)
+
+  exams2ilias(
+    fixture_path("table_cloze.Rmd"),
+    n = 1,
+    dir = mydir,
+    name = "table_pre",
+    xmlcollapse = FALSE,
+    table_strategy = "pre"
+  )
+
+  qti <- paste(read_zip_xml(file.path(mydir, "table_pre_qpl.zip"),
+    "table_pre_qpl/table_pre_qti.xml"), collapse = "\n")
+
+  expect_true(grepl("&lt;pre&gt;", qti, fixed = TRUE))
+  expect_true(grepl("Group | n | Mean", qti, fixed = TRUE))
+  expect_false(grepl("&lt;table", qti, fixed = TRUE))
+})
+
+test_that("complex tables fall back to preformatted text", {
+  html <- paste0(
+    '<table><tr><th colspan="2">Header</th></tr>',
+    '<tr><td>A</td><td>B</td></tr></table>'
+  )
+
+  normalized <- ilias_normalize_tables(html, "html_basic")
+
+  expect_true(grepl("<pre>", normalized, fixed = TRUE))
+  expect_true(grepl("Header", normalized, fixed = TRUE))
+  expect_false(grepl("<table>", normalized, fixed = TRUE))
+})
+
+test_that("choice-based cloze tables are still reduced to plain text", {
+  gap <- NULL
+  expect_warning(
+    gap <- ilias_gap_xml(
+      "schoice",
+      "gap_0",
+      c("<table><tr><td>correct</td></tr></table>", "<strong>wrong</strong>"),
+      c(TRUE, FALSE),
+      tolerance = NA,
+      points = 1,
+      maxchars = c(12, NA, 12)
+    ),
+    "plain text only"
+  )
+
+  qti <- paste(c(gap$presentation, gap$resprocessing), collapse = "\n")
+
+  expect_true(grepl("<![CDATA[correct]]", qti, fixed = TRUE))
+  expect_true(grepl("<![CDATA[wrong]]", qti, fixed = TRUE))
+  expect_false(grepl("<table|&lt;table|<strong|&lt;strong", qti))
+})
+
 test_that("boxplots exercise keeps generated images embedded", {
   mydir <- tempfile("exams2ilias-")
   dir.create(mydir)

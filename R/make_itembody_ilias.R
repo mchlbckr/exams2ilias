@@ -2,10 +2,15 @@ make_itembody_ilias <- function(rtiming = FALSE, shuffle = FALSE, rshuffle = shu
   minnumber = NULL, maxnumber = NULL, defaultval = NULL, minvalue = NULL,
   maxvalue = NULL, cutvalue = NULL, enumerate = FALSE, digits = NULL, tolerance = is.null(digits),
   fix_num = FALSE, maxchars = c(32, 1, 12),
-  eval = list(partial = TRUE, rule = "false2", negative = FALSE))
+  eval = list(partial = TRUE, rule = "false2", negative = FALSE),
+  table_strategy = c("html_basic", "pre", "plain", "html_styled", "keep"))
 {
+  table_strategy <- match.arg(table_strategy)
+
   function(x) {
     flavor <- "ilias"
+
+    x$question <- ilias_normalize_tables(x$question, table_strategy)
 
     points <- if(is.null(x$metainfo$points)) 1 else x$metainfo$points
 
@@ -171,6 +176,7 @@ make_itembody_ilias <- function(rtiming = FALSE, shuffle = FALSE, rshuffle = shu
           }
 
           qtxt <- if(length(questionlist[[i]]) >= j) questionlist[[i]][j] else NA_character_
+          qtxt <- ilias_normalize_tables(qtxt, table_strategy)
           qlc <- .empty_text(qtxt)
 
           txml <- c(

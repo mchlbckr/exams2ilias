@@ -46,7 +46,8 @@ Imports:
     base64enc,
     exams,
     tools,
-    utils
+    utils,
+    xml2
 Suggests:
     knitr,
     pkgdown,

@@ -108,6 +108,14 @@ labels as plain text, so avoid HTML and math markup in the answer options.
 `exams2ilias` removes unsupported HTML tags from dropdown labels and emits a
 warning.
 
+For visible tables in question text, prefer simple Markdown tables or
+`knitr::kable(df, format = "html", row.names = FALSE)`. The exporter normalizes
+tables by default with `table_strategy = "html_basic"`, which keeps only a
+conservative table structure for ILIAS. Avoid `kableExtra`, CSS classes, inline
+styles, captions, `rowspan`, `colspan`, nested tables, and layout HTML. If a
+table is wide or column separation is critical, test the exercise with
+`table_strategy = "pre"`.
+
 For static external files, register the file as a supplement before linking it:
 
 ````markdown

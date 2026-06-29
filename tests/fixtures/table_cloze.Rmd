@@ -1,0 +1,41 @@
+```{r setup, echo = FALSE}
+answer <- 7
+```
+
+Question
+========
+
+Use the summary table.
+
+<table class="dataframe" style="border-collapse: collapse;">
+  <thead>
+    <tr>
+      <th style="text-align:left;">Group</th>
+      <th style="text-align:right;">n</th>
+      <th style="text-align:right;">Mean</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td style="font-weight:bold;">A</td>
+      <td align="right">7</td>
+      <td></td>
+    </tr>
+  </tbody>
+</table>
+
+How many observations are in group A? `r exams::add_cloze(answer)`
+
+Solution
+========
+
+The table reports 7 observations for group A.
+
+Meta-information
+================
+extype: cloze
+exname: Table cloze
+exclozetype: `r exams::format_metainfo("type")`
+exsolution: `r exams::format_metainfo("solution")`
+extol: `r exams::format_metainfo("tolerance")`
+expoints: 1

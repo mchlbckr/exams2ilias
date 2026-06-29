@@ -100,6 +100,14 @@ ILIAS renders dropdown labels as plain text. Avoid HTML and math markup in
 choice-based cloze gaps; `exams2ilias` removes unsupported HTML tags from these
 labels and emits a warning.
 
+For visible tables in question text, use simple Markdown tables or
+`knitr::kable(df, format = "html", row.names = FALSE)`. The default
+`table_strategy = "html_basic"` rewrites rendered tables to a conservative
+ILIAS-compatible subset. Avoid `kableExtra`, CSS classes, inline styles,
+captions, `rowspan`, `colspan`, nested tables, and layout HTML. For wide tables
+or cases where visual column separation is essential, test the export with
+`table_strategy = "pre"`.
+
 Static files should be registered as supplements, for example with
 `exams::include_supplement("figure.png")`. Files created during exercise
 processing, such as plots and CSV files written by the exercise, are handled as

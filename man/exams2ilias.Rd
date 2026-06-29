@@ -19,7 +19,9 @@
     maxattempts = 0, cutvalue = 0, solutionswitch = TRUE, zip = TRUE,
     points = NULL, eval = list(partial = TRUE, negative = FALSE),
     converter = "pandoc-mathjax", xmlcollapse = TRUE,
-    metasolution = FALSE, \dots)
+    metasolution = FALSE,
+    table_strategy = c("html_basic", "pre", "plain", "html_styled", "keep"),
+    \dots)
 }
 \arguments{
   \item{file}{character. A specification of a (list of) exercise files.}
@@ -64,6 +66,12 @@
     output as qtimetadata tag? This currently only works for essay/string-like
     ILIAS questions and uses the PHP-serialized solution structure expected by
     ILIAS internally.}
+  \item{table_strategy}{character. Strategy for tables in rendered question
+    text. The default \code{"html_basic"} rewrites tables to a conservative
+    ILIAS-compatible subset. \code{"pre"} converts tables to preformatted
+    monospace text, \code{"plain"} to plain text, \code{"html_styled"} emits
+    simple legacy table attributes as a best-effort option, and \code{"keep"}
+    leaves table HTML unchanged.}
   \item{\dots}{further arguments passed on to \code{\link[exams]{exams2qti12}}.}
 }
 \value{
@@ -77,14 +85,22 @@
   The function supersedes the function of the same name in the \pkg{exams} package.
 
   Currently, this package targets ILIAS 9.17 and mirrors the working export
-  structure that was validated against that version. In particular, the exported
-  question pool XML is written as a flat collection of \code{<item>} elements
-  directly below \code{<questestinterop>}, matching the layout expected by current
-  ILIAS question pool imports.
+  structure that was validated against that version. The table handling follows
+  conservative compatibility findings for current ILIAS 9.x installations,
+  including ILIAS 9.20, where assessment HTML can be purified and normalized by
+  the editor or presentation layer. In particular, the exported question pool XML
+  is written as a flat collection of \code{<item>} elements directly below
+  \code{<questestinterop>}, matching the layout expected by current ILIAS
+  question pool imports.
 
   Numeric and cloze questions are exported in an ILIAS-specific item layout. For cloze
   questions, the subtypes \code{num}, \code{string}, \code{schoice}, and \code{mchoice}
   are mapped to ILIAS gap elements.
+
+  For tables in question text, prefer Markdown tables or
+  \code{knitr::kable(x, format = "html", row.names = FALSE)} as authoring input.
+  Avoid manual styling such as \pkg{kableExtra}, CSS classes, inline styles,
+  captions, \code{rowspan}, \code{colspan}, or layout HTML in exercise files.
 }
 \seealso{
   \code{\link[exams]{exams2qti12}}

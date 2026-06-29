@@ -11,8 +11,11 @@ exams2ilias <- function(file, n = 1L, nsamp = NULL, dir = ".",
   maxattempts = 0, cutvalue = 0, solutionswitch = TRUE, zip = TRUE,
   points = NULL, eval = list(partial = TRUE, negative = FALSE),
   converter = "pandoc-mathjax", xmlcollapse = TRUE,
-  metasolution = FALSE, ...)
+  metasolution = FALSE,
+  table_strategy = c("html_basic", "pre", "plain", "html_styled", "keep"), ...)
 {
+  table_strategy <- match.arg(table_strategy)
+
   ## resolve ILIAS XML template
   if(is.null(name)) name <- gsub("\\.xml$", "", basename(template))
   template <- ilias_resolve_template(template)
@@ -50,6 +53,7 @@ exams2ilias <- function(file, n = 1L, nsamp = NULL, dir = ".",
     if(is.null(itembody[[i]])) itembody[[i]] <- list()
     if(is.list(itembody[[i]])) {
       if(is.null(itembody[[i]]$eval)) itembody[[i]]$eval <- eval
+      if(is.null(itembody[[i]]$table_strategy)) itembody[[i]]$table_strategy <- table_strategy
       itembody[[i]] <- do.call(make_itembody_ilias, itembody[[i]])
     }
     if(!is.function(itembody[[i]])) stop(sprintf("wrong specification of %s", sQuote(i)))
@@ -108,7 +112,7 @@ exams2ilias <- function(file, n = 1L, nsamp = NULL, dir = ".",
 
     if(identical(x$metainfo$type, "cloze")) {
       item_xml[[k]] <- make_item_ilias_cloze(items[[k]], rval[[i]][[j]], item_id, title,
-        final_maxattempts[k], description = item_description)
+        final_maxattempts[k], description = item_description, table_strategy = table_strategy)
     } else {
       item_xml[[k]] <- patch_item_ilias(items[[k]], item_id, title,
         ilias_question_type(x$metainfo$type), final_maxattempts[k],
