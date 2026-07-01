@@ -39,7 +39,9 @@ test_that("non-placeholder cloze export uses ILIAS top-level items", {
   expect_true(any(grepl('<response_num ident="gap_1"', lm_qti, fixed = TRUE)))
   expect_true(any(grepl("<fieldlabel>textgaprating</fieldlabel>", lm_qti, fixed = TRUE)))
   expect_false(any(grepl("<fieldlabel>AUTHOR</fieldlabel>", lm_qti, fixed = TRUE)))
-  expect_false(any(grepl("<fieldlabel>fixedTextLength</fieldlabel>", lm_qti, fixed = TRUE)))
+  expect_true(any(grepl("<fieldlabel>fixedTextLength</fieldlabel>", lm_qti, fixed = TRUE)))
+  expect_true(any(grepl("<fieldlabel>feedback_mode</fieldlabel>", lm_qti, fixed = TRUE)))
+  expect_true(any(grepl("<fieldlabel>combinations</fieldlabel>", lm_qti, fixed = TRUE)))
   expect_false(any(grepl("<itemfeedback", lm_qti, fixed = TRUE)))
   expect_true(any(grepl('minnumber="', lm_qti, fixed = TRUE)))
   expect_false(any(grepl('minnumber="([^"]+)" maxnumber="\\1"', lm_qti, perl = TRUE)))
@@ -70,6 +72,11 @@ test_that("metadata fields are emitted as siblings in single-choice items", {
     swiss_qti,
     perl = TRUE
   ))
+  expect_true(grepl(
+    "<fieldlabel>ILIAS_VERSION</fieldlabel><fieldentry>9\\.20\\.0</fieldentry>|<fieldlabel>ILIAS_VERSION</fieldlabel>\\s*<fieldentry>9\\.20\\.0</fieldentry>",
+    swiss_qti,
+    perl = TRUE
+  ))
   expect_false(grepl(
     "<fieldlabel>identicalScoring</fieldlabel>\\s*<qtimetadatafield>",
     swiss_qti,
@@ -80,6 +87,11 @@ test_that("metadata fields are emitted as siblings in single-choice items", {
     swiss_qti,
     perl = TRUE
   ))
+})
+
+test_that("ILIAS 9.20 template alias resolves to bundled template", {
+  expect_identical(ilias_resolve_template("ilias_9_20"), ilias_resolve_template("ilias"))
+  expect_identical(ilias_resolve_template("ilias_9_17"), ilias_resolve_template("ilias"))
 })
 
 test_that("question pool description can be read from extags", {
@@ -182,6 +194,58 @@ test_that("choice-based cloze gaps respect exshuffle", {
     "cloze_shuffle_choice_qpl/cloze_shuffle_choice_qti.xml"), collapse = "\n")
 
   expect_true(grepl('<render_choice shuffle="Yes">', shuffle_qti, fixed = TRUE))
+})
+
+test_that("cloze metadata follows native ILIAS identical scoring fields", {
+  mydir <- tempfile("exams2ilias-")
+  dir.create(mydir)
+
+  exams2ilias(
+    fixture_path("cloze_repeated_select.Rmd"),
+    n = 1,
+    dir = mydir,
+    name = "cloze_repeated_select",
+    xmlcollapse = FALSE
+  )
+
+  qti <- paste(read_zip_xml(file.path(mydir, "cloze_repeated_select_qpl.zip"),
+    "cloze_repeated_select_qpl/cloze_repeated_select_qti.xml"), collapse = "\n")
+
+  expect_true(grepl(
+    paste0(
+      "<qtimetadatafield><fieldlabel>textgaprating</fieldlabel><fieldentry>ci</fieldentry></qtimetadatafield>\\s*",
+      "<qtimetadatafield><fieldlabel>fixedTextLength</fieldlabel><fieldentry/></qtimetadatafield>\\s*",
+      "<qtimetadatafield><fieldlabel>identicalScoring</fieldlabel><fieldentry>1</fieldentry></qtimetadatafield>\\s*",
+      "<qtimetadatafield><fieldlabel>feedback_mode</fieldlabel><fieldentry>gapQuestion</fieldentry></qtimetadatafield>\\s*",
+      "<qtimetadatafield><fieldlabel>combinations</fieldlabel><fieldentry>W10=</fieldentry></qtimetadatafield>"
+    ),
+    qti,
+    perl = TRUE
+  ))
+})
+
+test_that("choice-based cloze export keeps repeated correct select solutions scorable", {
+  mydir <- tempfile("exams2ilias-")
+  dir.create(mydir)
+
+  exams2ilias(
+    fixture_path("cloze_repeated_select.Rmd"),
+    n = 1,
+    dir = mydir,
+    name = "cloze_repeated_select",
+    xmlcollapse = FALSE
+  )
+
+  qti <- paste(read_zip_xml(file.path(mydir, "cloze_repeated_select_qpl.zip"),
+    "cloze_repeated_select_qpl/cloze_repeated_select_qti.xml"), collapse = "\n")
+
+  expect_true(grepl("<fieldlabel>identicalScoring</fieldlabel>\\s*<fieldentry>1</fieldentry>", qti, perl = TRUE))
+  expect_equal(lengths(regmatches(qti, gregexpr("<response_str ident=\"gap_[01]\"", qti, perl = TRUE))), 2L)
+  expect_equal(lengths(regmatches(qti, gregexpr(
+    "<varequal respident=\"gap_[01]\"><!\\[CDATA\\[nominal\\]\\]></varequal>\\s*</conditionvar>\\s*<setvar action=\"Add\">1</setvar>",
+    qti,
+    perl = TRUE
+  ))), 2L)
 })
 
 test_that("placeholder cloze export keeps the simplified ILIAS structure", {

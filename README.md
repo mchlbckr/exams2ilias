@@ -18,7 +18,7 @@ stars](https://img.shields.io/github/stars/mchlbckr/exams2ilias?style=social)](h
 `exams2ilias` is a small standalone R package that builds ILIAS question pool
 exports on top of [`exams`](https://www.r-exams.org/) while keeping the
 ILIAS-specific QTI rendering logic inside this package. The export structure
-is validated against `ILIAS 9.17`.
+is validated against `ILIAS 9.20`.
 
 ## Install
 

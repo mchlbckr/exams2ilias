@@ -45,9 +45,10 @@
   \item{num}{function or named list applied to numerical questions.}
   \item{mchoice, schoice, string, cloze}{function or named list applied to multiple choice,
     single choice, string, and cloze questions, respectively.}
-  \item{template}{character. Either the internal \code{"ilias"} / \code{"ilias_9_17"}
-    template alias or a path to a custom QTI 1.2 template file. The internal default
-    targets ILIAS 9.17.}
+  \item{template}{character. Either the internal \code{"ilias"} / \code{"ilias_9_20"}
+    template alias or a path to a custom QTI 1.2 template file. The legacy
+    \code{"ilias_9_17"} alias remains available for compatibility. The internal
+    default targets ILIAS 9.20.}
   \item{duration}{integer. Set the duration of the exam in minutes.}
   \item{stitle}{character. A title that should be used for the sections.}
   \item{ititle}{character. A title that should be used for the assessment items.}
@@ -84,11 +85,11 @@
   package and then rewrites the result to the question-pool layout required by ILIAS.
   The function supersedes the function of the same name in the \pkg{exams} package.
 
-  Currently, this package targets ILIAS 9.17 and mirrors the working export
+  Currently, this package targets ILIAS 9.20 and mirrors the working export
   structure that was validated against that version. The table handling follows
   conservative compatibility findings for current ILIAS 9.x installations,
-  including ILIAS 9.20, where assessment HTML can be purified and normalized by
-  the editor or presentation layer. In particular, the exported question pool XML
+  where assessment HTML can be purified and normalized by the editor or
+  presentation layer. In particular, the exported question pool XML
   is written as a flat collection of \code{<item>} elements directly below
   \code{<questestinterop>}, matching the layout expected by current ILIAS
   question pool imports.

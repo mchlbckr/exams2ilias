@@ -22,7 +22,7 @@ This resubmission addresses the two points raised in the previous CRAN review:
 
 `exams2ilias` exports exercises from `R/exams` to question pools for the
 learning management system `ILIAS` using an `ILIAS`-specific QTI 1.2 rendering
-path validated against `ILIAS` 9.17.
+path validated against `ILIAS` 9.20.
 
 ## Additional checks
 

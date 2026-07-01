@@ -35,7 +35,7 @@ Description: Utilities for exporting exercises from 'R/exams' to
     question pools for the learning management system 'ILIAS'. The
     package implements a Question and Test Interoperability 1.2
     rendering path tailored to 'ILIAS' and writes the question-pool XML
-    layout validated for imports in 'ILIAS' 9.17. Supported exercise
+    layout validated for imports in 'ILIAS' 9.20. Supported exercise
     types include single-choice, multiple-choice, numeric, string, and
     combined gap questions. The underlying 'R/exams' framework is
     described in Zeileis, Umlauf, and Leisch (2014)

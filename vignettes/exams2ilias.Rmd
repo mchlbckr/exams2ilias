@@ -17,7 +17,7 @@ knitr::opts_chunk$set(
 
 `exams2ilias` exports exercises from `R/exams` to ILIAS question pools. The
 package keeps the ILIAS-specific QTI 1.2 logic in one place and currently
-targets the import structure validated against ILIAS 9.17.
+targets the import structure validated against ILIAS 9.20.
 
 ## Install
 
@@ -53,7 +53,7 @@ be addressed directly by file name.
 ## Internal template
 
 By default, the package uses the bundled ILIAS template alias `"ilias"`, which
-currently resolves to the internal template for ILIAS 9.17. You only need to
+currently resolves to the internal template for ILIAS 9.20. You only need to
 set `template` explicitly if you want to use your own XML template file.
 
 ```{r}

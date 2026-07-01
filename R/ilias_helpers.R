@@ -14,9 +14,11 @@ ilias_delete_NULLs <- function(x.list) {
 }
 
 ilias_resolve_template <- function(template) {
-  if(identical(template, "ilias") || identical(template, "ilias_9_17")) {
+  if(identical(template, "ilias") ||
+      identical(template, "ilias_9_20") ||
+      identical(template, "ilias_9_17")) {
     path <- system.file("xml", "ilias_9_17.xml", package = "exams2ilias")
-    if(!nzchar(path)) stop("internal ILIAS 9.17 template not found")
+    if(!nzchar(path)) stop("internal ILIAS 9.x template not found")
     return(path)
   }
   template
@@ -365,51 +367,51 @@ ilias_item_header <- function(id, title, maxattempts = NULL) {
     '" title="', ilias_escape_attribute(title), '"', attr, '>')
 }
 
-ilias_item_metadata <- function(questiontype, ilias_version = "9.17.0",
+ilias_item_metadata <- function(questiontype, ilias_version = "9.20.0",
   author = "R/exams", textgaprating = "ci", include_author = TRUE,
-  include_fixed_text_length = TRUE, description = "")
+  include_fixed_text_length = TRUE, description = "",
+  include_feedback_mode = FALSE, include_combinations = FALSE)
 {
-  xml <- c(
+  field <- function(label, entry = NULL) {
+    entry <- if(is.null(entry)) {
+      '<fieldentry/>'
+    } else {
+      paste0('<fieldentry>', entry, '</fieldentry>')
+    }
+    paste0(
+      '<qtimetadatafield><fieldlabel>', label, '</fieldlabel>',
+      entry,
+      '</qtimetadatafield>'
+    )
+  }
+
+  fields <- c(
+    field("ILIAS_VERSION", ilias_escape_text(ilias_version)),
+    field("QUESTIONTYPE", ilias_escape_text(questiontype))
+  )
+  if(include_author) {
+    fields <- c(fields, field("AUTHOR", ilias_escape_text(author)))
+  }
+  fields <- c(fields, field("textgaprating", textgaprating))
+  if(include_fixed_text_length) {
+    fields <- c(fields, field("fixedTextLength"))
+  }
+  fields <- c(fields, field("identicalScoring", "1"))
+  if(include_feedback_mode) {
+    fields <- c(fields, field("feedback_mode", "gapQuestion"))
+  }
+  if(include_combinations) {
+    fields <- c(fields, field("combinations", "W10="))
+  }
+
+  c(
     paste0('<qticomment>', ilias_escape_text(description), '</qticomment>'),
     '<itemmetadata>',
     '<qtimetadata>',
-    '<qtimetadatafield>',
-    '<fieldlabel>ILIAS_VERSION</fieldlabel>',
-    paste0('<fieldentry>', ilias_escape_text(ilias_version), '</fieldentry>'),
-    '</qtimetadatafield>',
-    '<qtimetadatafield>',
-    '<fieldlabel>QUESTIONTYPE</fieldlabel>',
-    paste0('<fieldentry>', ilias_escape_text(questiontype), '</fieldentry>'),
-    '</qtimetadatafield>',
-    '<qtimetadatafield>',
-    '<fieldlabel>textgaprating</fieldlabel>',
-    paste0('<fieldentry>', textgaprating, '</fieldentry>'),
-    '</qtimetadatafield>',
-    '<qtimetadatafield>',
-    '<fieldlabel>identicalScoring</fieldlabel>',
-    '<fieldentry>1</fieldentry>',
-    '</qtimetadatafield>',
+    fields,
     '</qtimetadata>',
     '</itemmetadata>'
   )
-  if(include_author) {
-    xml <- append(xml, c(
-      '<qtimetadatafield>',
-      '<fieldlabel>AUTHOR</fieldlabel>',
-      paste0('<fieldentry>', ilias_escape_text(author), '</fieldentry>'),
-      '</qtimetadatafield>'
-    ), after = 11L)
-  }
-  if(include_fixed_text_length) {
-    pos <- grep("<fieldlabel>identicalScoring</fieldlabel>", xml, fixed = TRUE)[1L]
-    xml <- append(xml, c(
-      '<qtimetadatafield>',
-      '<fieldlabel>fixedTextLength</fieldlabel>',
-      '<fieldentry/>',
-      '</qtimetadatafield>'
-    ), after = pos - 2L)
-  }
-  xml
 }
 
 ilias_bare_qid <- function(qref) {
@@ -713,7 +715,8 @@ make_item_ilias_cloze <- function(item_xml, x, item_id, title, maxattempts = 0,
     ilias_item_header(item_id, title,
       paste0('maxattempts="', if(is.infinite(maxattempts) || maxattempts == 0) 0 else maxattempts, '"')),
     ilias_item_metadata("CLOZE QUESTION",
-      include_author = FALSE, include_fixed_text_length = FALSE,
+      include_author = FALSE, include_fixed_text_length = TRUE,
+      include_feedback_mode = TRUE, include_combinations = TRUE,
       description = description),
     presentation,
     resprocessing,
@@ -776,7 +779,7 @@ make_qpl_xml <- function(name, qrefs, pool_id = paste0(name, "_qpl"), descriptio
   xml <- c(
     '<?xml version="1.0" encoding="utf-8"?>',
     ## Keep the historic ILIAS export DOCTYPE: the public DTD URL currently
-    ## returns 404, but ILIAS 9.17 imports this structure successfully.
+    ## returns 404, but ILIAS 9.20 imports this structure successfully.
     '<!DOCTYPE Test SYSTEM "http://www.ilias.uni-koeln.de/download/dtd/ilias_co.dtd">',
     '<!--Export of ILIAS Test Questionpool 3029 of installation .-->',
     '<ContentObject Type="Questionpool_Test">',

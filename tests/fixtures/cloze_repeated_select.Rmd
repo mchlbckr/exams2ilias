@@ -1,0 +1,26 @@
+```{r setup, echo = FALSE, results = "hide"}
+choices <- c("nominal", "ordinal", "metrisch")
+```
+
+Question
+========
+Which scale level is used in the first example?
+`r exams::add_cloze(choices[1], choices, type = "schoice")`
+
+Which scale level is used in the second example?
+`r exams::add_cloze(choices[1], choices, type = "schoice")`
+
+`r exams::format_metainfo("answerlist")`
+
+Solution
+========
+Both examples use a nominal scale.
+
+Meta-information
+================
+extype: cloze
+exname: Cloze Repeated Select
+exclozetype: `r exams::format_metainfo("type")`
+exsolution: `r exams::format_metainfo("solution")`
+extol: `r exams::format_metainfo("tolerance")`
+expoints: 1|1
