@@ -100,6 +100,8 @@ expoints: 1
 ````
 
 For cloze exercises with several gaps, you can provide one point value per gap.
+ILIAS Identical Scoring is enabled by default, so repeated correct answers in
+different gaps are scored independently.
 
 ## ILIAS-specific restrictions
 

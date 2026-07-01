@@ -370,7 +370,8 @@ ilias_item_header <- function(id, title, maxattempts = NULL) {
 ilias_item_metadata <- function(questiontype, ilias_version = "9.20.0",
   author = "R/exams", textgaprating = "ci", include_author = TRUE,
   include_fixed_text_length = TRUE, description = "",
-  include_feedback_mode = FALSE, include_combinations = FALSE)
+  include_feedback_mode = FALSE, include_combinations = FALSE,
+  identical_scoring = TRUE)
 {
   field <- function(label, entry = NULL) {
     entry <- if(is.null(entry)) {
@@ -396,7 +397,7 @@ ilias_item_metadata <- function(questiontype, ilias_version = "9.20.0",
   if(include_fixed_text_length) {
     fields <- c(fields, field("fixedTextLength"))
   }
-  fields <- c(fields, field("identicalScoring", "1"))
+  fields <- c(fields, field("identicalScoring", if(isTRUE(identical_scoring)) "1" else "0"))
   if(include_feedback_mode) {
     fields <- c(fields, field("feedback_mode", "gapQuestion"))
   }

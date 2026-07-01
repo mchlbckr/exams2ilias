@@ -96,7 +96,8 @@
 
   Numeric and cloze questions are exported in an ILIAS-specific item layout. For cloze
   questions, the subtypes \code{num}, \code{string}, \code{schoice}, and \code{mchoice}
-  are mapped to ILIAS gap elements.
+  are mapped to ILIAS gap elements. ILIAS Identical Scoring is enabled by
+  default so repeated correct answers in different gaps are scored independently.
 
   For tables in question text, prefer Markdown tables or
   \code{knitr::kable(x, format = "html", row.names = FALSE)} as authoring input.

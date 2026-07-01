@@ -94,6 +94,16 @@ test_that("ILIAS 9.20 template alias resolves to bundled template", {
   expect_identical(ilias_resolve_template("ilias_9_17"), ilias_resolve_template("ilias"))
 })
 
+test_that("identical scoring is enabled by default in ILIAS metadata", {
+  metadata <- paste(ilias_item_metadata("CLOZE QUESTION"), collapse = "\n")
+
+  expect_true(grepl(
+    "<fieldlabel>identicalScoring</fieldlabel><fieldentry>1</fieldentry>",
+    metadata,
+    fixed = TRUE
+  ))
+})
+
 test_that("question pool description can be read from extags", {
   mydir <- tempfile("exams2ilias-")
   dir.create(mydir)

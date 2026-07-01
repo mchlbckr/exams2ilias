@@ -100,6 +100,10 @@ ILIAS renders dropdown labels as plain text. Avoid HTML and math markup in
 choice-based cloze gaps; `exams2ilias` removes unsupported HTML tags from these
 labels and emits a warning.
 
+For cloze questions, `exams2ilias` enables ILIAS Identical Scoring by default.
+This lets repeated correct answers in different gaps, such as repeated dropdown
+choices, receive points independently.
+
 For visible tables in question text, use simple Markdown tables or
 `knitr::kable(df, format = "html", row.names = FALSE)`. The default
 `table_strategy = "html_basic"` rewrites rendered tables to a conservative
