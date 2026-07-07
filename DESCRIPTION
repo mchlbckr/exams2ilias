@@ -1,6 +1,6 @@
 Package: exams2ilias
 Title: ILIAS Export Interface for R/Exams
-Version: 0.0.99
+Version: 0.0.2
 Authors@R: c(
     person(
       "Michael", "Bücker",
