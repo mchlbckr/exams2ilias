@@ -22,6 +22,15 @@ is validated against `ILIAS 9.20`.
 
 ## Install
 
+Install the latest development version from GitHub:
+
+```r
+install.packages("remotes")
+remotes::install_github("mchlbckr/exams2ilias")
+```
+
+The CRAN release is the stable version, but may be behind GitHub:
+
 ```r
 install.packages("exams2ilias")
 ```
