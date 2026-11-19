@@ -48,7 +48,7 @@
   \item{template}{character. Either the internal \code{"ilias"} / \code{"ilias_9_20"}
     template alias or a path to a custom QTI 1.2 template file. The legacy
     \code{"ilias_9_17"} alias remains available for compatibility. The internal
-    default targets ILIAS 9.20.}
+    bundled default works with ILIAS 9.20 and 10.12.}
   \item{duration}{integer. Set the duration of the exam in minutes.}
   \item{stitle}{character. A title that should be used for the sections.}
   \item{ititle}{character. A title that should be used for the assessment items.}
@@ -85,8 +85,7 @@
   package and then rewrites the result to the question-pool layout required by ILIAS.
   The function supersedes the function of the same name in the \pkg{exams} package.
 
-  Currently, this package targets ILIAS 9.20 and mirrors the working export
-  structure that was validated against that version. The table handling follows
+  The same export format was tested with ILIAS 9.20 and 10.12. The table handling follows
   conservative compatibility findings for current ILIAS 9.x installations,
   where assessment HTML can be purified and normalized by the editor or
   presentation layer. In particular, the exported question pool XML

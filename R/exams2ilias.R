@@ -118,6 +118,9 @@ exams2ilias <- function(file, n = 1L, nsamp = NULL, dir = ".",
         ilias_question_type(x$metainfo$type), final_maxattempts[k],
         description = item_description)
     }
+    if(metasolution && identical(x$metainfo$type, "string")) {
+      item_xml[[k]] <- solution_to_qtimetadata(item_xml[[k]], x$solution)
+    }
     item_xml[[k]] <- ilias_embed_item_images(item_xml[[k]], rval[[i]][[j]])
   }
 
@@ -137,8 +140,6 @@ exams2ilias <- function(file, n = 1L, nsamp = NULL, dir = ".",
     writeLines(qti_xml, file.path(pkgdir, paste0(name, "_qti.xml")))
     writeLines(make_qpl_xml(name, qrefs, pool_id, description = pool_description),
       file.path(pkgdir, paste0(name, "_qpl.xml")))
-
-    if(metasolution) solution_to_qtimetadata(name, rval, path = workdir)
 
     owd <- getwd()
     setwd(workdir)

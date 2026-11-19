@@ -210,7 +210,8 @@ make_itembody_ilias <- function(rtiming = FALSE, shuffle = FALSE, rshuffle = shu
               if(!is.na(maxchars[[i]][1])) paste0(' maxchars="', max(c(nchar(soltext), maxchars[[i]][1])), '"') else NULL,
               if(!is.na(maxchars[[i]][2])) paste0(' rows="', maxchars[[i]][2], '"') else NULL,
               if(!is.na(maxchars[[i]][3])) paste0(' columns="', maxchars[[i]][3], '"') else NULL,
-              if(!is.na(maxchars[[i]][3])) ' fibtype="String" prompt="Box"' else NULL,
+              if(!is.na(maxchars[[i]][3]) && (type[i] == "string" || !tolerance || fix_num)) ' fibtype="String"' else NULL,
+              if(!is.na(maxchars[[i]][3])) ' prompt="Box"' else NULL,
               '>',
               sep = ""
             ),

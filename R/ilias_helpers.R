@@ -820,31 +820,22 @@ make_qpl_xml <- function(name, qrefs, pool_id = paste0(name, "_qpl"), descriptio
   c(xml, '</QuestionSkillAssignments>', '</ContentObject>')
 }
 
-solution_to_qtimetadata <- function(name, exm, path = ".") {
-  xml <- readLines(file.path(path, name, paste0(name, "_qti.xml")), warn = FALSE)
-
-  for(i in seq_along(exm)) {
-    idx <- (grep("QUESTIONTYPE", xml) + 2L)[i]
-    solustr <- paste(exm[[i]][[1L]]$solution, collapse = "\n")
-
-    if(exm[[i]][[1L]]$solution[1L] %in% c("<ol>", "<ul>")) {
-      solustr <- gsub("</li>.*", "", strsplit(solustr, "<li>", fixed = TRUE)[[1L]])[-1L]
-    }
-
-    solustr <- solustr_to_phpstruct(solustr, length(solustr))
-
-    xml <- append(xml,
-      c("<qtimetadatafield>",
-        paste0("<fieldlabel>termscoring</fieldlabel><fieldentry>",
-          solustr, "</fieldentry>"),
-        "</qtimetadatafield>",
-        "<qtimetadatafield>",
-        "<fieldlabel>termrelation</fieldlabel><fieldentry>any</fieldentry>",
-        "</qtimetadatafield>"),
-      after = idx)
+solution_to_qtimetadata <- function(xml, solution) {
+  idx <- match("</qtimetadata>", xml)
+  solustr <- paste(solution, collapse = "\n")
+  if(length(solution) && solution[1L] %in% c("<ol>", "<ul>")) {
+    solustr <- gsub("</li>.*", "", strsplit(solustr, "<li>", fixed = TRUE)[[1L]])[-1L]
   }
 
-  writeLines(xml, file.path(path, name, paste0(name, "_qti.xml")))
+  solustr <- solustr_to_phpstruct(solustr, length(solustr))
+  append(xml,
+    c("<qtimetadatafield>",
+      paste0("<fieldlabel>termscoring</fieldlabel><fieldentry>", solustr, "</fieldentry>"),
+      "</qtimetadatafield>",
+      "<qtimetadatafield>",
+      "<fieldlabel>termrelation</fieldlabel><fieldentry>any</fieldentry>",
+      "</qtimetadatafield>"),
+    after = idx - 1L)
 }
 
 solustr_to_phpstruct <- function(solustr, nitems, encode = TRUE) {
