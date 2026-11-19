@@ -573,6 +573,24 @@ test_that("metasolution writes ILIAS term scoring metadata", {
   expect_true(grepl("SE", decoded, fixed = TRUE))
 })
 
+test_that("collapsed mixed pools include solution metadata only in text items", {
+  mydir <- tempfile("exams2ilias-")
+  dir.create(mydir)
+  exams2ilias(c(example_path("stats_num.Rmd"), fixture_path("string_metasolution.Rmd")),
+    n = 2, dir = mydir, name = "mixed_metasolution", metasolution = TRUE)
+
+  zipfile <- file.path(mydir, "mixed_metasolution_qpl.zip")
+  qti <- xml2::read_xml(unz(zipfile, "mixed_metasolution_qpl/mixed_metasolution_qti.xml"))
+  items <- xml2::xml_find_all(qti, "/questestinterop/item")
+  expect_length(items, 4L)
+  metadata <- "itemmetadata/qtimetadata/qtimetadatafield"
+  types <- xml2::xml_text(xml2::xml_find_first(items,
+    paste0(metadata, "[fieldlabel='QUESTIONTYPE']/fieldentry")))
+  terms <- xml2::xml_find_first(items, paste0(metadata, "[fieldlabel='termscoring']/fieldentry"))
+  expect_equal(sum(types == "TEXT QUESTION"), 2L)
+  expect_identical(!is.na(xml2::xml_text(terms)), types == "TEXT QUESTION")
+})
+
 test_that("metasolution PHP string lengths use UTF-8 byte counts", {
   decoded_raw <- solustr_to_phpstruct("Größe", nitems = 1L, encode = FALSE)
   decoded <- rawToChar(decoded_raw[decoded_raw != as.raw(0)])
@@ -611,6 +629,14 @@ test_that("bundled example exercises export individually", {
 
     zipfile <- file.path(mydir, paste0(export_name, "_qpl.zip"))
     expect_true(file.exists(zipfile), info = file)
+    qti_member <- file.path(paste0(export_name, "_qpl"), paste0(export_name, "_qti.xml"))
+    qti <- xml2::read_xml(unz(zipfile, qti_member))
+    expect_length(xml2::xml_find_all(qti, "/questestinterop/item"), 1L)
+    if(file == "stats_num.Rmd") {
+      fib <- xml2::xml_find_first(qti, ".//response_num/render_fib")
+      expect_identical(xml2::xml_attr(fib, "fibtype"), "Decimal")
+      expect_identical(xml2::xml_attr(fib, "prompt"), "Box")
+    }
   }
 })
 
